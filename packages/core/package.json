@@ -1,0 +1,20 @@
+{
+  "name": "@openclaw-skill-center/core",
+  "version": "0.1.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@openclaw-skill-center/catalog": "0.1.0",
+    "@openclaw-skill-center/shared": "0.1.0",
+    "json5": "^2.2.3",
+    "pino": "^9.9.0"
+  }
+}

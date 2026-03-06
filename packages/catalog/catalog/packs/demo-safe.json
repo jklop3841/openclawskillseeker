@@ -1,0 +1,11 @@
+{
+  "id": "demo-safe",
+  "name": "Demo Safe Pack",
+  "description": "Smallest known-good demo pack for default safe-mode installation checks.",
+  "skills": ["calendar"],
+  "patchOpenClawConfig": true,
+  "notes": [
+    "Intended for smoke tests and demo recordings.",
+    "Contains only live candidates verified during local validation."
+  ]
+}

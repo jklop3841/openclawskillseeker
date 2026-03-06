@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "generatedAt": "2026-03-06T00:00:00.000Z",
+  "source": "local",
+  "skills": [
+    {
+      "slug": "agent-self-assessment",
+      "name": "Agent Self Assessment",
+      "description": "Operational safety and self-check workflow for OpenClaw agents.",
+      "homepage": "https://clawhub.ai/",
+      "tags": ["safety", "audit", "ops"],
+      "trustLevel": "curated",
+      "curated": true,
+      "free": true,
+      "notes": "Review source before enabling write-capable tools."
+    },
+    {
+      "slug": "calendar",
+      "name": "Calendar",
+      "description": "Calendar skill example used as a simple starter integration.",
+      "homepage": "https://clawhub.ai/",
+      "tags": ["productivity", "starter"],
+      "trustLevel": "community",
+      "curated": true,
+      "free": true,
+      "notes": "Community package; keep disabled unless reviewed."
+    }
+  ],
+  "packs": [
+    {
+      "id": "safe-starter",
+      "name": "Safe Starter Pack",
+      "description": "Minimal starter pack with one live, low-friction calendar skill.",
+      "skills": ["calendar"],
+      "patchOpenClawConfig": true,
+      "notes": [
+        "Whitelisted starter pack for local testing.",
+        "Calendar is community-maintained and should be reviewed before first use."
+      ]
+    },
+    {
+      "id": "demo-safe",
+      "name": "Demo Safe Pack",
+      "description": "Smallest known-good demo pack for default safe-mode installation checks.",
+      "skills": ["calendar"],
+      "patchOpenClawConfig": true,
+      "notes": [
+        "Intended for smoke tests and demo recordings.",
+        "Contains only live candidates verified during local validation."
+      ]
+    },
+    {
+      "id": "ops-basics",
+      "name": "Ops Basics Pack",
+      "description": "Operational baseline with one safe default install and one gated suspicious helper.",
+      "skills": ["agent-self-assessment", "calendar"],
+      "patchOpenClawConfig": true,
+      "notes": [
+        "Designed for cautious local deployments.",
+        "agent-self-assessment is intentionally kept behind explicit suspicious approval.",
+        "calendar provides the live default-safe install path."
+      ]
+    }
+  ]
+}

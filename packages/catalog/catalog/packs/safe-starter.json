@@ -1,0 +1,11 @@
+{
+  "id": "safe-starter",
+  "name": "Safe Starter Pack",
+  "description": "Minimal starter pack with one live, low-friction calendar skill.",
+  "skills": ["calendar"],
+  "patchOpenClawConfig": true,
+  "notes": [
+    "Whitelisted starter pack for local testing.",
+    "Calendar is community-maintained and should be reviewed before first use."
+  ]
+}

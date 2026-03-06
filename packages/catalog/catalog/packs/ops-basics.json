@@ -1,0 +1,12 @@
+{
+  "id": "ops-basics",
+  "name": "Ops Basics Pack",
+  "description": "Operational baseline with one safe default install and one gated suspicious helper.",
+  "skills": ["agent-self-assessment", "calendar"],
+  "patchOpenClawConfig": true,
+  "notes": [
+    "Designed for cautious local deployments.",
+    "agent-self-assessment is intentionally kept behind explicit suspicious approval.",
+    "calendar provides the live default-safe install path."
+  ]
+}

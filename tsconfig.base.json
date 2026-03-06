@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "baseUrl": ".",
+    "paths": {
+      "@openclaw-skill-center/shared": ["packages/shared/src/index.ts"],
+      "@openclaw-skill-center/catalog": ["packages/catalog/src/index.ts"],
+      "@openclaw-skill-center/core": ["packages/core/src/index.ts"]
+    },
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "sourceMap": true,
+    "composite": false
+  }
+}

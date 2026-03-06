@@ -1,0 +1,48 @@
+services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: dev
+    working_dir: /workspace
+    command: npm run dev --workspace @openclaw-skill-center/web
+    init: true
+    environment:
+      CHOKIDAR_USEPOLLING: "true"
+      WATCHPACK_POLLING: "true"
+      PORT: "47221"
+    ports:
+      - "4173:4173"
+      - "47221:47221"
+    volumes:
+      - .:/workspace
+      - node_modules:/workspace/node_modules
+      - npm_cache:/root/.npm
+
+  web-prod:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: prod-web
+    init: true
+    environment:
+      PORT: "47221"
+    ports:
+      - "47221:47221"
+    profiles:
+      - prod
+
+  cli:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: prod-cli
+    working_dir: /app
+    init: true
+    command: ["doctor"]
+    profiles:
+      - cli
+
+volumes:
+  node_modules:
+  npm_cache:
