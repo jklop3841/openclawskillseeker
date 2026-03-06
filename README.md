@@ -1,8 +1,8 @@
 # OpenClaw Skill Center
 
-OpenClaw Skill Center is a local sidecar for safer OpenClaw skill installs.
+Safer local sidecar for curated OpenClaw skill installs.
 
-It does not modify OpenClaw core. It validates curated skills, installs them into isolated directories, and verifies real on-disk evidence before you point OpenClaw at those skills.
+OpenClaw Skill Center validates skills, installs them into isolated directories, and verifies real filesystem evidence before you add those skills to your OpenClaw environment.
 
 ## Why It Exists
 
@@ -17,11 +17,11 @@ OpenClaw Skill Center adds a controlled sidecar layer around that process.
 
 ## Positioning
 
-- Sidecar: separate from OpenClaw core
-- Whitelist-first: suspicious skills are skipped by default
-- Local-first: local JSON state, local snapshots, local reports
-- Auditable: install results are proven by real files, not by logs alone
-- Windows-friendly: explicit `clawhub.cmd` support with WSL-aware bridge
+- Sidecar architecture: separate from OpenClaw core
+- Whitelist-first defaults: suspicious skills skipped by default
+- Isolated installs: target directories stay outside OpenClaw core
+- Auditable verification: check `SKILL.md`, `origin.json`, and `lock.json`
+- Windows-friendly: explicit `clawhub.cmd` support
 
 ## Current Status
 
@@ -45,7 +45,7 @@ This prototype already proves four core claims:
 1. It does not modify OpenClaw core.
 2. It installs into an isolated target directory.
 3. It keeps a whitelist-first safety posture.
-4. It can verify the resulting filesystem layout.
+4. It verifies the resulting filesystem layout.
 
 ## Minimal Demo
 
@@ -105,6 +105,7 @@ CLI install commands also print a short human-readable summary:
 - [Operations](/D:/AI/backlup/docs/OPERATIONS.md)
 - [One-Page Overview](/D:/AI/backlup/docs/ONE_PAGER.md)
 - [GitHub Homepage Copy](/D:/AI/backlup/docs/GITHUB_HOME.md)
+- [Sales Page Draft](/D:/AI/backlup/docs/SALES_PAGE.md)
 - [Failure Explanation Templates](/D:/AI/backlup/docs/FAILURE_PLAYBOOK.md)
 
 ## Development

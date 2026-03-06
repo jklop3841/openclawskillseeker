@@ -18,8 +18,7 @@ Instead of telling users to install arbitrary skills directly into their OpenCla
 
 OpenClaw skills are powerful, but third-party skills are still code-like assets with access to tools and context.
 
-The safest product posture is not “install everything faster.”
-The safest posture is:
+The safest product posture is not "install everything faster." The safest posture is:
 
 - curate first
 - skip suspicious by default
@@ -58,4 +57,4 @@ npx tsx apps\cli\src\index.ts verify-pack-layout D:\temp\openclaw-skill-center\c
 
 ## Best Message To Users
 
-“This is not a giant OpenClaw replacement. It is a safer install sidecar for curated skills.”
+"This is not a giant OpenClaw replacement. It is a safer install sidecar for curated skills."
