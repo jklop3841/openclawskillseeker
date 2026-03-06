@@ -1,4 +1,5 @@
 export * from "./catalog-service.js";
+export * from "./attach-service.js";
 export * from "./clawhub-resolution.js";
 export * from "./command.js";
 export * from "./config-service.js";

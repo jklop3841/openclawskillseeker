@@ -1,7 +1,10 @@
 import express from "express";
+import fs from "node:fs";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
+  AttachService,
   CatalogService,
   ConfigService,
   DoctorService,
@@ -18,17 +21,37 @@ const app = express();
 const port = Number(process.env.PORT ?? 47221);
 const paths = getAppPaths();
 const catalog = new CatalogService();
-const registry = new RegistryAdapter(process.cwd());
+
+function detectDefaultClawhubBin() {
+  if (process.env.CLAWHUB_BIN) {
+    return process.env.CLAWHUB_BIN;
+  }
+
+  if (process.platform === "win32") {
+    const candidate = path.join(os.homedir(), "AppData", "Roaming", "npm", "clawhub.cmd");
+    return fs.existsSync(candidate) ? candidate : undefined;
+  }
+
+  return undefined;
+}
+
+const registry = new RegistryAdapter(process.cwd(), {
+  clawhubBin: detectDefaultClawhubBin()
+});
 const reports = new ReportService(paths);
 const snapshots = new SnapshotService(paths);
 const config = new ConfigService(paths, snapshots);
 const packs = new PackService(paths, registry, snapshots, reports, config);
 const rollback = new RollbackService(paths, reports);
+const doctor = new DoctorService(paths, {
+  clawhubBin: detectDefaultClawhubBin()
+});
+const attach = new AttachService(paths, doctor, packs, config);
 
 app.use(express.json());
 
 app.get("/api/doctor", async (_req, res) => {
-  const report = await new DoctorService(paths).run();
+  const report = await doctor.run();
   res.json(report);
 });
 
@@ -38,6 +61,16 @@ app.get("/api/catalog", (_req, res) => {
 
 app.get("/api/state", async (_req, res) => {
   res.json(await loadState(paths));
+});
+
+app.post("/api/attach/calendar", async (_req, res) => {
+  try {
+    const state = await loadState(paths);
+    const result = await attach.attachCalendar(state);
+    res.json(result.result);
+  } catch (error) {
+    res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
+  }
 });
 
 app.post("/api/packs/:packId/install", async (req, res) => {

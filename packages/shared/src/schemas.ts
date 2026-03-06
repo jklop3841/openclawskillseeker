@@ -146,6 +146,44 @@ export const PackValidationReportSchema = z.object({
   ).default([])
 });
 
+export const VerifySkillDetailSchema = z.object({
+  slug: z.string(),
+  skillRoot: z.string(),
+  skillMdExists: z.boolean(),
+  originJsonExists: z.boolean()
+});
+
+export const VerifyPackLayoutSchema = z.object({
+  targetDir: z.string(),
+  skillsDir: z.string(),
+  rootExists: z.boolean(),
+  skillsDirExists: z.boolean(),
+  skillEntries: z.array(z.string()).default([]),
+  lockFilePath: z.string().optional(),
+  lockFileExists: z.boolean().optional(),
+  skillDetails: z.array(VerifySkillDetailSchema).optional(),
+  ok: z.boolean(),
+  findings: z.array(z.string()).default([])
+});
+
+export const AttachFlowResultSchema = z.object({
+  skillSlug: z.string(),
+  packId: z.string(),
+  targetDir: z.string(),
+  skillsDir: z.string(),
+  success: z.boolean(),
+  doctorSummary: z.object({
+    clawhubFound: z.boolean(),
+    openClawConfigPath: z.string(),
+    resolutionMode: ClawhubResolutionModeSchema
+  }),
+  installReport: InstallExecutionReportSchema,
+  verify: VerifyPackLayoutSchema,
+  configPatch: ConfigPatchResultSchema.optional(),
+  userSummary: z.array(z.string()).default([]),
+  nextStep: z.string()
+});
+
 export const InstallPlanSchema = z.object({
   packId: z.string(),
   packName: z.string(),
@@ -190,5 +228,7 @@ export type InstallExecutionReport = z.infer<typeof InstallExecutionReportSchema
 export type InstalledPack = z.infer<typeof InstalledPackSchema>;
 export type SkillValidation = z.infer<typeof SkillValidationSchema>;
 export type PackValidationReport = z.infer<typeof PackValidationReportSchema>;
+export type VerifyPackLayout = z.infer<typeof VerifyPackLayoutSchema>;
+export type AttachFlowResult = z.infer<typeof AttachFlowResultSchema>;
 export type ReportRecord = z.infer<typeof ReportRecordSchema>;
 export type RollbackVerify = z.infer<typeof RollbackVerifySchema>;
