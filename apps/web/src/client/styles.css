@@ -165,8 +165,61 @@ button:disabled {
   background: rgba(255, 255, 255, 0.75);
 }
 
+.stages {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.8rem;
+}
+
+.stage {
+  border-radius: 18px;
+  padding: 1rem;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.stage strong,
+.stage span {
+  display: block;
+}
+
+.stage span {
+  margin-top: 0.2rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.76rem;
+  color: var(--muted);
+}
+
+.stage p {
+  margin-bottom: 0;
+}
+
+.stage-success {
+  border-color: rgba(22, 101, 52, 0.22);
+  background: rgba(240, 253, 244, 0.92);
+}
+
+.stage-failed {
+  border-color: rgba(185, 28, 28, 0.18);
+  background: rgba(254, 242, 242, 0.92);
+}
+
+.stage-running {
+  border-color: rgba(180, 83, 9, 0.22);
+  background: rgba(255, 247, 237, 0.92);
+}
+
 .summary-list p {
   margin: 0.55rem 0;
+}
+
+pre {
+  overflow: auto;
+  padding: 1rem;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid var(--line);
 }
 
 .ok {

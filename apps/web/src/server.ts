@@ -73,6 +73,16 @@ app.post("/api/attach/calendar", async (_req, res) => {
   }
 });
 
+app.post("/api/attach/demo-safe", async (_req, res) => {
+  try {
+    const state = await loadState(paths);
+    const result = await attach.attachDemoSafe(state);
+    res.json(result.result);
+  } catch (error) {
+    res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
+  }
+});
+
 app.post("/api/packs/:packId/install", async (req, res) => {
   try {
     const state = await loadState(paths);

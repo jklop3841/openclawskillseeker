@@ -167,11 +167,30 @@ export const VerifyPackLayoutSchema = z.object({
 });
 
 export const AttachFlowResultSchema = z.object({
+  kind: z.enum(["skill", "pack"]).default("skill"),
   skillSlug: z.string(),
   packId: z.string(),
   targetDir: z.string(),
   skillsDir: z.string(),
+  selectedExtraDir: z.string(),
+  environmentMode: z.enum(["windows", "wsl", "unknown"]).default("unknown"),
   success: z.boolean(),
+  stages: z.array(
+    z.object({
+      key: z.enum(["detect", "install", "attach", "verify"]),
+      status: z.enum(["pending", "running", "success", "failed"]),
+      summary: z.string()
+    })
+  ).default([]),
+  failureCategory: z.enum([
+    "clawhub-not-found",
+    "suspicious-skipped",
+    "verify-failed",
+    "install-retriable",
+    "install-failed",
+    "attach-failed"
+  ]).optional(),
+  failureMessage: z.string().optional(),
   doctorSummary: z.object({
     clawhubFound: z.boolean(),
     openClawConfigPath: z.string(),
