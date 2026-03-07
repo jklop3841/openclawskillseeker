@@ -1,0 +1,60 @@
+{
+  "name": "@openclaw-skill-center/desktop",
+  "version": "0.1.0",
+  "description": "OpenClaw机械外骨骼 personal desktop app",
+  "author": "OpenClaw机械外骨骼",
+  "private": true,
+  "type": "module",
+  "main": "dist/src/main.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "electron dist/src/main.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "dist:win": "electron-builder --win nsis"
+  },
+  "devDependencies": {
+    "electron": "37.2.3",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "ai.openclaw.exoskeleton",
+    "productName": "OpenClaw机械外骨骼",
+    "npmRebuild": false,
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "../web/dist",
+        "to": "web-dist"
+      },
+      {
+        "from": "assets",
+        "to": "assets"
+      }
+    ],
+    "win": {
+      "signAndEditExecutable": false,
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/app-icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  }
+}

@@ -63,6 +63,24 @@ npx tsx apps\cli\src\index.ts install-skill calendar --targetDir D:\temp\opencla
 npx tsx apps\cli\src\index.ts verify-pack-layout D:\temp\openclaw-skill-center\calendar --verbose
 ```
 
+## Personal App Preview
+
+To launch the current desktop-shell prototype:
+
+```powershell
+Set-Location D:\AI\backlup
+npm install
+npm run start:desktop
+```
+
+What the user sees first:
+
+- environment status
+- one-click `Install and attach Calendar`
+- optional `Install demo-safe pack`
+- `Undo last attach`
+- plain-language success or failure guidance
+
 ## Successful Install Evidence
 
 Expected evidence under the isolated target directory:
