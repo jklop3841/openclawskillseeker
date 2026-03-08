@@ -142,7 +142,7 @@ export function createWebApp() {
     clientRootCandidates[0];
 
   app.use(express.static(clientRoot));
-  app.get("*", (_req, res) => {
+  app.get(/.*/, (_req, res) => {
     res.sendFile(path.join(clientRoot, "index.html"));
   });
 
