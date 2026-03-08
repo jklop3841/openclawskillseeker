@@ -131,7 +131,15 @@ export function createWebApp() {
   });
 
   const __dirname = path.dirname(fileURLToPath(import.meta.url));
-  const clientRoot = path.resolve(__dirname, "../client");
+  const resourcesPath = (process as NodeJS.Process & { resourcesPath?: string }).resourcesPath;
+  const clientRootCandidates = [
+    path.resolve(__dirname, "../client"),
+    path.resolve(__dirname, "..", "..", "..", "..", "client"),
+    path.resolve(resourcesPath ?? "", "web-dist", "client")
+  ].filter(Boolean);
+  const clientRoot =
+    clientRootCandidates.find((candidate) => fs.existsSync(path.join(candidate, "index.html"))) ??
+    clientRootCandidates[0];
 
   app.use(express.static(clientRoot));
   app.get("*", (_req, res) => {

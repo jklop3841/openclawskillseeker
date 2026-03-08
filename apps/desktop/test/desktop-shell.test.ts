@@ -10,6 +10,14 @@ test("desktop shell resolves built web server entry", () => {
   );
 });
 
+test("desktop shell resolves packaged web server entry", () => {
+  const entry = resolveWebServerEntry("C:\\Users\\Administrator\\AppData\\Local\\Programs\\OpenClawExoskeleton\\resources", true);
+  assert.equal(
+    entry,
+    "C:\\Users\\Administrator\\AppData\\Local\\Programs\\OpenClawExoskeleton\\resources\\web-dist\\server\\apps\\web\\src\\server.js"
+  );
+});
+
 test("desktop shell resolves local web url", () => {
   assert.equal(resolveWebUrl(), "http://127.0.0.1:47221");
 });
@@ -27,4 +35,9 @@ test("desktop shell creates browser window options", () => {
 test("desktop shell resolves icon path", () => {
   const icon = resolveDesktopIcon("D:\\AI\\backlup\\apps\\desktop\\dist");
   assert.equal(icon, "D:\\AI\\backlup\\apps\\desktop\\assets\\app-icon.png");
+});
+
+test("desktop shell resolves packaged icon path", () => {
+  const icon = resolveDesktopIcon("C:\\Users\\Administrator\\AppData\\Local\\Programs\\OpenClawExoskeleton\\resources", true);
+  assert.equal(icon, "C:\\Users\\Administrator\\AppData\\Local\\Programs\\OpenClawExoskeleton\\resources\\assets\\app-icon.png");
 });

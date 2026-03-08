@@ -2,7 +2,7 @@ import path from "node:path";
 
 export function resolveWebServerEntry(fromDir: string, packaged = false) {
   if (packaged) {
-    return path.resolve(fromDir, "..", "web-dist", "server", "server.js");
+    return path.resolve(fromDir, "web-dist", "server", "apps", "web", "src", "server.js");
   }
 
   return path.resolve(fromDir, "..", "..", "web", "dist", "server", "server.js");
@@ -14,7 +14,7 @@ export function resolveWebUrl(port = 47221) {
 
 export function resolveDesktopIcon(fromDir: string, packaged = false) {
   if (packaged) {
-    return path.resolve(fromDir, "..", "assets", "app-icon.png");
+    return path.resolve(fromDir, "assets", "app-icon.png");
   }
 
   return path.resolve(fromDir, "..", "assets", "app-icon.png");
