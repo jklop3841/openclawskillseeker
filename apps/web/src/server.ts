@@ -16,7 +16,7 @@ import {
   SnapshotService,
   getAppPaths,
   loadState
-} from "@openclaw-skill-center/core";
+} from "../../../packages/core/src/index.js";
 
 function detectDefaultClawhubBin() {
   if (process.env.CLAWHUB_BIN) {
