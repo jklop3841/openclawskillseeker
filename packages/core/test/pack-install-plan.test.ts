@@ -44,7 +44,8 @@ describe("buildInstallPlan", () => {
           trustLevel: "official",
           curated: true,
           free: true,
-          tags: []
+          tags: [],
+          sourceType: "registry"
         }
       ],
       packsRoot: path.join("root", "packs"),
@@ -53,6 +54,39 @@ describe("buildInstallPlan", () => {
 
     assert.deepEqual(plan.allowedSkills, ["safe"]);
     assert.deepEqual(plan.blockedSkills, ["missing"]);
+  });
+
+  test("plan preserves local skill source metadata", () => {
+    const plan = buildInstallPlan({
+      pack: {
+        id: "pack",
+        name: "Pack",
+        description: "desc",
+        skills: ["local-skill"],
+        patchOpenClawConfig: true,
+        notes: []
+      },
+      catalogSkills: [
+        {
+          slug: "local-skill",
+          name: "Local Skill",
+          description: "desc",
+          trustLevel: "curated",
+          curated: true,
+          free: true,
+          tags: [],
+          sourceType: "local",
+          sourceRef: {
+            path: "docs/local-skill"
+          }
+        }
+      ],
+      packsRoot: path.join("root", "packs"),
+      patchConfig: true
+    });
+
+    assert.equal(plan.skills[0]?.sourceType, "local");
+    assert.equal(plan.skills[0]?.sourcePath, "docs/local-skill");
   });
 
   test("dry-run install does not write targetDir", async () => {
@@ -212,6 +246,72 @@ describe("buildInstallPlan", () => {
     assert.equal(result.installReport.failedRetriable.length, 0);
     assert.equal(verify.ok, true);
     assert.deepEqual(verify.skillEntries, ["calendar"]);
+  });
+
+  test("single skill install treats rate-limited validation as retriable install attempt", async () => {
+    const root = await makeTempRoot();
+    const targetDir = path.join(root, "calendar-retry-pack");
+    const paths = getAppPaths(root);
+    let inspectAttempts = 0;
+    let installAttempts = 0;
+    const registry = new RegistryAdapter(root, {
+      clawhubBin: "clawhub",
+      runner: async (_command, args) => {
+        if (args[0] === "inspect") {
+          inspectAttempts += 1;
+          if (inspectAttempts === 1) {
+            return { code: 1, stdout: "", stderr: "Rate limit exceeded" };
+          }
+
+          return { code: 0, stdout: "calendar\nSummary: Calendar management", stderr: "" };
+        }
+
+        installAttempts += 1;
+        return { code: 1, stdout: "", stderr: "Rate limit exceeded" };
+      }
+    });
+    const snapshots = new SnapshotService(paths);
+    const reports = new ReportService(paths);
+    const config = new ConfigService(paths, snapshots);
+    const service = new PackService(paths, registry, snapshots, reports, config, [0, 0]);
+
+    const result = await service.installSkill("calendar", { installedPacks: [], snapshots: [] }, {
+      targetDir
+    });
+
+    assert.equal(installAttempts, 3);
+    assert.equal(result.installReport.failedRetriable.length, 1);
+    assert.equal(result.installReport.failedRetriable[0]?.slug, "calendar");
+  });
+
+  test("local curated pack installs without registry calls", async () => {
+    const root = await makeTempRoot();
+    const targetDir = path.join(root, "agency-poc-pack");
+    const paths = getAppPaths(root);
+    const registry = new RegistryAdapter(root, {
+      runner: async () => {
+        throw new Error("registry should not be called for local curated pack");
+      }
+    });
+    const snapshots = new SnapshotService(paths);
+    const reports = new ReportService(paths);
+    const config = new ConfigService(paths, snapshots);
+    const service = new PackService(paths, registry, snapshots, reports, config, [0, 0]);
+
+    const result = await service.installPack("agency-poc", { installedPacks: [], snapshots: [] }, {
+      targetDir
+    });
+    const verify = await service.verifyPackLayout(targetDir, { verbose: true });
+
+    assert.deepEqual(
+      result.installReport.installed.map((entry) => entry.slug).sort(),
+      ["agency-frontend-developer", "agency-orchestrator", "agency-reality-checker"].sort()
+    );
+    assert.equal(result.installReport.failedPermanent.length, 0);
+    assert.equal(result.installReport.failedRetriable.length, 0);
+    assert.equal(verify.ok, true);
+    assert.equal(verify.lockFileExists, true);
+    assert.equal(verify.skillDetails?.every((detail) => detail.originJsonExists), true);
   });
 
   test("verify pack layout empty dir is strict false", async () => {

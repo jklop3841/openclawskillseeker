@@ -8,9 +8,10 @@ import {
   type InstallDecision,
   type InstallExecutionReport,
   type PackValidationReport,
-  type SkillValidation
+  type SkillValidation,
+  type SkillSourceType
 } from "@openclaw-skill-center/shared";
-import { ensureDir, pathExists } from "./fs.js";
+import { copyPath, ensureDir, pathExists, writeJsonFile } from "./fs.js";
 import { buildInstallPlan } from "./install-planner.js";
 import { type AppPaths } from "./paths.js";
 import { RegistryAdapter } from "./registry-adapter.js";
@@ -71,6 +72,24 @@ export class PackService {
   }
 
   async validateSkill(slug: string): Promise<SkillValidation> {
+    const catalog = loadLocalCatalog();
+    const localSkill = catalog.skills.find((entry) => entry.slug === slug && entry.sourceType === "local");
+    if (localSkill) {
+      const localPath = this.resolveLocalSkillSource(localSkill.sourceRef?.path);
+      const exists =
+        localPath !== undefined &&
+        (await pathExists(localPath)) &&
+        (await pathExists(path.join(localPath, "SKILL.md")));
+
+      return {
+        slug,
+        exists,
+        summary: localSkill.description,
+        suspiciousHint: false,
+        rawStatus: exists ? `local skill found at ${localPath}` : "local skill source missing"
+      };
+    }
+
     const inspect = await this.registry.inspect(slug);
     const text = `${inspect.stdout}\n${inspect.stderr}`.trim();
     const lowered = text.toLowerCase();
@@ -124,14 +143,16 @@ export class PackService {
   ) {
     const workdir = options.targetDir;
     const validation = await this.validateSkill(slug);
+    const canProceed =
+      validation.exists || this.isRetriableRegistryMessage(validation.rawStatus.toLowerCase());
     const plan = {
       packId: `skill:${slug}`,
       packName: `Skill ${slug}`,
       installRoot: workdir,
       patchConfig: false,
-      skills: [{ slug, allowed: validation.exists, reason: validation.rawStatus }],
-      blockedSkills: validation.exists ? [] : [slug],
-      allowedSkills: validation.exists ? [slug] : []
+      skills: [{ slug, allowed: canProceed, reason: validation.rawStatus }],
+      blockedSkills: canProceed ? [] : [slug],
+      allowedSkills: canProceed ? [slug] : []
     };
 
     return this.installPackUsingPlan(plan.packId, plan, state, {
@@ -279,37 +300,77 @@ export class PackService {
   }
 
   private async preflightInstall(slugs: string[], allowSuspicious: boolean) {
-    const entries: Array<{ slug: string; decision: InstallDecision; reason: string }> = [];
+    const catalog = loadLocalCatalog();
+    const skillMap = new Map(catalog.skills.map((skill) => [skill.slug, skill]));
+    const entries: Array<{ slug: string; decision: InstallDecision; reason: string; sourceType: SkillSourceType; sourcePath?: string }> = [];
     const reasons: string[] = [];
 
     for (const slug of slugs) {
+      const localSkill = skillMap.get(slug);
+      if (localSkill?.sourceType === "local") {
+        const sourcePath = this.resolveLocalSkillSource(localSkill.sourceRef?.path);
+        const skillMdPath = sourcePath ? path.join(sourcePath, "SKILL.md") : "";
+        const exists = sourcePath !== undefined && (await pathExists(sourcePath)) && (await pathExists(skillMdPath));
+        if (!exists) {
+          entries.push({
+            slug,
+            decision: "skip-unknown",
+            reason: "Local skill source missing.",
+            sourceType: "local",
+            sourcePath
+          });
+          reasons.push(`${slug}: local skill source missing`);
+          continue;
+        }
+
+        entries.push({
+          slug,
+          decision: "install",
+          reason: "Local curated skill source found.",
+          sourceType: "local",
+          sourcePath
+        });
+        continue;
+      }
+
       const probe = await this.validateSkill(slug);
       const lowered = `${probe.rawStatus} ${probe.summary}`.toLowerCase();
 
       if (!probe.exists) {
-        entries.push({ slug, decision: "skip-unknown", reason: "Skill not found in registry." });
+        if (this.isRetriableRegistryMessage(lowered)) {
+          entries.push({
+            slug,
+            decision: "install",
+            reason: "Registry validation was rate-limited; proceeding to install attempt.",
+            sourceType: "registry"
+          });
+          reasons.push(`${slug}: validation rate-limited, proceeding to install attempt`);
+          continue;
+        }
+
+        entries.push({ slug, decision: "skip-unknown", reason: "Skill not found in registry.", sourceType: "registry" });
         reasons.push(`${slug}: not found in registry`);
         continue;
       }
 
       if (lowered.includes("malicious") || lowered.includes("blocked")) {
-        entries.push({ slug, decision: "fail-hard", reason: "Registry metadata indicates malicious or blocked skill." });
+        entries.push({ slug, decision: "fail-hard", reason: "Registry metadata indicates malicious or blocked skill.", sourceType: "registry" });
         reasons.push(`${slug}: malicious or blocked`);
         continue;
       }
 
       if (probe.suspiciousHint) {
         if (allowSuspicious) {
-          entries.push({ slug, decision: "install", reason: "Suspicious skill allowed explicitly." });
+          entries.push({ slug, decision: "install", reason: "Suspicious skill allowed explicitly.", sourceType: "registry" });
           reasons.push(`${slug}: suspicious but allowed explicitly`);
         } else {
-          entries.push({ slug, decision: "skip-suspicious", reason: "Suspicious skill requires explicit allow-suspicious." });
+          entries.push({ slug, decision: "skip-suspicious", reason: "Suspicious skill requires explicit allow-suspicious.", sourceType: "registry" });
           reasons.push(`${slug}: suspicious and skipped by policy`);
         }
         continue;
       }
 
-      entries.push({ slug, decision: "install", reason: "Preflight passed." });
+      entries.push({ slug, decision: "install", reason: "Preflight passed.", sourceType: "registry" });
     }
 
     return { entries, reasons };
@@ -336,17 +397,19 @@ export class PackService {
       .filter((entry) => entry.decision === "install")
       .map((entry) => ({
         slug: entry.slug,
-        command: "clawhub",
-        args: [
-          "install",
-          entry.slug,
-          "--workdir",
-          workdir,
-          "--dir",
-          "skills",
-          "--no-input",
-          ...(options.allowSuspicious && entry.reason.toLowerCase().includes("suspicious") ? ["--force"] : [])
-        ]
+        command: entry.sourceType === "local" ? "local-copy" : "clawhub",
+        args: entry.sourceType === "local"
+          ? [entry.sourcePath ?? "", path.join(workdir, "skills", entry.slug)]
+          : [
+              "install",
+              entry.slug,
+              "--workdir",
+              workdir,
+              "--dir",
+              "skills",
+              "--no-input",
+              ...(options.allowSuspicious && entry.reason.toLowerCase().includes("suspicious") ? ["--force"] : [])
+            ]
       }));
 
     const report = this.createEmptyInstallReport(preflight.reasons);
@@ -389,7 +452,10 @@ export class PackService {
     const outputs = [];
     for (const entry of preflight.entries.filter((item) => item.decision === "install")) {
       const force = options.allowSuspicious && entry.reason.toLowerCase().includes("suspicious");
-      const attempt = await this.installWithRetry(entry.slug, workdir, force);
+      const attempt =
+        entry.sourceType === "local"
+          ? await this.installLocalSkill(entry.slug, workdir, entry.sourcePath)
+          : await this.installWithRetry(entry.slug, workdir, force);
       outputs.push(...attempt.outputs);
       const { result } = attempt;
       if (!result.ok) {
@@ -424,9 +490,16 @@ export class PackService {
       report.installed.push({
         slug: entry.slug,
         decision: "install",
-        reason: force ? "Installed with explicit allow-suspicious and --force." : "Installed successfully."
+        reason:
+          entry.sourceType === "local"
+            ? "Installed from local curated source."
+            : force
+              ? "Installed with explicit allow-suspicious and --force."
+              : "Installed successfully."
       });
     }
+
+    this.reconcileInstallReport(report, preflight.entries.filter((item) => item.decision === "install"), outputs);
 
     let nextState: AppState = {
       ...state,
@@ -480,6 +553,10 @@ export class PackService {
 
   private isRetriableInstallError(result: { stdout: string; stderr: string }) {
     const text = `${result.stdout}\n${result.stderr}`.toLowerCase();
+    return this.isRetriableRegistryMessage(text);
+  }
+
+  private isRetriableRegistryMessage(text: string) {
     return text.includes("rate limit exceeded") || text.includes("too many requests") || text.includes("429");
   }
 
@@ -502,8 +579,121 @@ export class PackService {
     return { result, outputs };
   }
 
+  private async installLocalSkill(slug: string, workdir: string, sourcePath?: string) {
+    const outputs: Array<{ slug: string; result: { command: string; args: string[]; ok: boolean } }> = [];
+    const destination = path.join(workdir, "skills", slug);
+
+    if (!sourcePath) {
+      const result = {
+        command: "local-copy",
+        args: ["missing-source", destination],
+        ok: false,
+        stdout: "",
+        stderr: "local skill source path missing"
+      };
+      outputs.push({ slug, result });
+      return { result, outputs };
+    }
+
+    try {
+      await copyPath(sourcePath, destination);
+      await writeJsonFile(path.join(destination, ".clawhub", "origin.json"), {
+        slug,
+        sourceType: "local",
+        sourcePath,
+        installedAt: new Date().toISOString()
+      });
+      await writeJsonFile(path.join(workdir, ".clawhub", "lock.json"), {
+        sourceType: "local",
+        installedAt: new Date().toISOString()
+      });
+
+      const result = {
+        command: "local-copy",
+        args: [sourcePath, destination],
+        ok: true,
+        stdout: "installed local curated skill",
+        stderr: ""
+      };
+      outputs.push({ slug, result });
+      return { result, outputs };
+    } catch (error) {
+      const result = {
+        command: "local-copy",
+        args: [sourcePath, destination],
+        ok: false,
+        stdout: "",
+        stderr: error instanceof Error ? error.message : String(error)
+      };
+      outputs.push({ slug, result });
+      return { result, outputs };
+    }
+  }
+
   private async sleep(delayMs: number) {
     await new Promise((resolve) => setTimeout(resolve, delayMs));
+  }
+
+  private reconcileInstallReport(
+    report: InstallExecutionReport,
+    attemptedEntries: Array<{ slug: string; decision: InstallDecision; reason: string; sourceType: SkillSourceType }>,
+    outputs: Array<{ slug: string; result: { command: string; args: string[]; ok: boolean; stdout?: string; stderr?: string } }>
+  ) {
+    const accountedFor = new Set([
+      ...report.installed.map((entry) => entry.slug),
+      ...report.skipped.map((entry) => entry.slug),
+      ...report.failedPermanent.map((entry) => entry.slug),
+      ...report.failedRetriable.map((entry) => entry.slug)
+    ]);
+
+    for (const entry of attemptedEntries) {
+      if (accountedFor.has(entry.slug)) {
+        continue;
+      }
+
+      const lastOutput = [...outputs].reverse().find((output) => output.slug === entry.slug)?.result;
+      if (!lastOutput) {
+        report.failedPermanent.push({
+          slug: entry.slug,
+          decision: "fail-hard",
+          reason: "install attempt finished without a recorded result"
+        });
+        continue;
+      }
+
+      if (lastOutput.ok) {
+        report.installed.push({
+          slug: entry.slug,
+          decision: "install",
+          reason: "Installed successfully."
+        });
+        continue;
+      }
+
+      const reason = this.compactMessage(lastOutput.stderr || lastOutput.stdout || "install failed");
+      if (this.isRetriableRegistryMessage(`${lastOutput.stdout ?? ""}\n${lastOutput.stderr ?? ""}`.toLowerCase())) {
+        report.failedRetriable.push({
+          slug: entry.slug,
+          decision: "retry-later",
+          reason: `retry-later: ${reason}`
+        });
+        continue;
+      }
+
+      report.failedPermanent.push({
+        slug: entry.slug,
+        decision: "fail-hard",
+        reason
+      });
+    }
+  }
+
+  private resolveLocalSkillSource(sourcePath?: string) {
+    if (!sourcePath) {
+      return undefined;
+    }
+
+    return path.isAbsolute(sourcePath) ? sourcePath : path.resolve(process.cwd(), sourcePath);
   }
 
   private compactMessage(message: string) {
