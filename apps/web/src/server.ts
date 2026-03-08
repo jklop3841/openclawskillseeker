@@ -51,6 +51,13 @@ export function createWebApp() {
 
   app.use(express.json());
 
+  app.get("/api/health", (_req, res) => {
+    res.json({
+      ok: true,
+      service: "openclaw-skill-center-web"
+    });
+  });
+
   app.get("/api/doctor", async (_req, res) => {
     const report = await doctor.run();
     res.json(report);

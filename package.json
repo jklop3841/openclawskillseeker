@@ -14,8 +14,9 @@
     "build": "npm run build --workspaces --if-present",
     "dev:web": "npm run dev --workspace @openclaw-skill-center/web",
     "start:desktop": "npm run build --workspace @openclaw-skill-center/web && npm run build --workspace @openclaw-skill-center/desktop && npm run start --workspace @openclaw-skill-center/desktop",
-    "dist:desktop": "npm run build --workspace @openclaw-skill-center/web && npm run build --workspace @openclaw-skill-center/desktop && npm run dist:win --workspace @openclaw-skill-center/desktop",
-    "dist:setup": "npm run build --workspace @openclaw-skill-center/web && npm run build --workspace @openclaw-skill-center/desktop && npx electron-builder --win dir --publish never --projectDir apps/desktop && powershell -ExecutionPolicy Bypass -File scripts/build_winrar_setup.ps1",
+    "dist:desktop": "npm run build --workspace @openclaw-skill-center/web && npm run build --workspace @openclaw-skill-center/desktop && node scripts/prepare_desktop_runtime.mjs && npm run dist:win --workspace @openclaw-skill-center/desktop",
+    "dist:setup": "npm run build --workspace @openclaw-skill-center/web && npm run build --workspace @openclaw-skill-center/desktop && node scripts/prepare_desktop_runtime.mjs && npx electron-builder --win dir --publish never --projectDir apps/desktop && powershell -ExecutionPolicy Bypass -File scripts/build_winrar_setup.ps1",
+    "smoke:desktop-packaged": "node scripts/smoke_packaged_desktop.mjs",
     "dev:cli": "npm run dev --workspace @openclaw-skill-center/cli",
     "test": "tsx --test packages/core/test/*.test.ts apps/desktop/test/*.test.ts",
     "typecheck": "npm run typecheck --workspaces --if-present"
