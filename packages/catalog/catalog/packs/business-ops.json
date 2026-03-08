@@ -1,0 +1,16 @@
+{
+  "id": "business-ops",
+  "name": "Business Ops Pack",
+  "description": "Local curated pack for support replies, operations runbooks, and cross-functional execution.",
+  "skills": [
+    "customer-support-replier",
+    "ops-runbook-copilot",
+    "repo-triage-coordinator",
+    "product-brief-writer"
+  ],
+  "patchOpenClawConfig": true,
+  "notes": [
+    "Designed to make a fresh OpenClaw instance feel useful for real business work quickly.",
+    "Focuses on support, coordination, and operational clarity rather than raw tool count."
+  ]
+}

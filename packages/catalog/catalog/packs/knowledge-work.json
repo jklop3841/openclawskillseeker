@@ -1,0 +1,16 @@
+{
+  "id": "knowledge-work",
+  "name": "Knowledge Work Pack",
+  "description": "Local curated pack for research, briefs, docs, and meeting synthesis.",
+  "skills": [
+    "research-first-decider",
+    "product-brief-writer",
+    "doc-systematizer",
+    "meeting-note-synthesizer"
+  ],
+  "patchOpenClawConfig": true,
+  "notes": [
+    "Good default pack for founders, operators, and knowledge workers.",
+    "All skills are local curated drafts that install without live registry dependency."
+  ]
+}

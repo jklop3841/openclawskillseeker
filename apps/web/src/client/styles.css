@@ -244,6 +244,132 @@ button:disabled {
   background: rgba(255, 255, 255, 0.03);
 }
 
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.section-head p {
+  margin-bottom: 0;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.catalog-card {
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 1.1rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.045), rgba(255, 255, 255, 0.02)),
+    rgba(255, 255, 255, 0.02);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.catalog-card::after {
+  content: "";
+  position: absolute;
+  inset: auto -10% -22% auto;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 95, 88, 0.12), transparent 62%);
+  pointer-events: none;
+}
+
+.catalog-card h3 {
+  margin: 0;
+}
+
+.catalog-card p {
+  margin: 0;
+}
+
+.catalog-topline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.catalog-meta {
+  color: var(--muted);
+  font-size: 0.94rem;
+}
+
+.store-stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 0.8rem;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: rgba(8, 15, 27, 0.58);
+}
+
+.store-stats.compact {
+  padding: 0.7rem;
+}
+
+.store-stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.store-label {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--ink);
+  font-size: 0.82rem;
+}
+
+.chip-accent {
+  background: rgba(255, 95, 88, 0.12);
+  border-color: rgba(255, 95, 88, 0.24);
+}
+
+.chip-local {
+  background: rgba(87, 215, 255, 0.12);
+  border-color: rgba(87, 215, 255, 0.24);
+}
+
+.card-actions {
+  margin-top: auto;
+  padding-top: 0.4rem;
+}
+
+.skill-card {
+  min-height: 220px;
+}
+
 .stages {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));

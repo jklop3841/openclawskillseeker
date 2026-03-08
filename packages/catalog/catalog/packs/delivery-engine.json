@@ -1,0 +1,18 @@
+{
+  "id": "delivery-engine",
+  "name": "Delivery Engine Pack",
+  "description": "Local curated pack for implementation orchestration, bug triage, and release checks.",
+  "skills": [
+    "agency-orchestrator",
+    "agency-frontend-developer",
+    "agency-reality-checker",
+    "bug-triage-investigator",
+    "release-readiness-checker",
+    "repo-triage-coordinator"
+  ],
+  "patchOpenClawConfig": true,
+  "notes": [
+    "Built to cover build-ship-fix loops with explicit QA gates.",
+    "Combines adapted agency workflow skills with local triage and release helpers."
+  ]
+}

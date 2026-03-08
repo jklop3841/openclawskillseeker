@@ -24,6 +24,192 @@
       "curated": true,
       "free": true,
       "notes": "Community package; keep disabled unless reviewed."
+    },
+    {
+      "slug": "research-first-decider",
+      "name": "Research First Decider",
+      "description": "Local curated skill that decides whether to reuse, fork, borrow, or build before implementation starts.",
+      "homepage": "https://github.com/jklop3841/openclawskillseeker",
+      "tags": ["research", "architecture", "planning", "decision"],
+      "trustLevel": "curated",
+      "curated": true,
+      "free": true,
+      "notes": "Local curated workflow skill for research-first implementation planning.",
+      "sourceType": "local",
+      "sourceRef": {
+        "path": "skills/research-first-decider"
+      }
+    },
+    {
+      "slug": "product-brief-writer",
+      "name": "Product Brief Writer",
+      "description": "Local curated skill for turning vague ideas into short, decision-ready product briefs.",
+      "homepage": "https://github.com/jklop3841/openclawskillseeker",
+      "tags": ["product", "brief", "strategy", "planning"],
+      "trustLevel": "curated",
+      "curated": true,
+      "free": true,
+      "notes": "Useful for turning raw ideas into scope, value, and rollout decisions.",
+      "sourceType": "local",
+      "sourceRef": {
+        "path": "skills/product-brief-writer"
+      }
+    },
+    {
+      "slug": "doc-systematizer",
+      "name": "Doc Systematizer",
+      "description": "Local curated skill for converting messy notes into clean, reusable documentation.",
+      "homepage": "https://github.com/jklop3841/openclawskillseeker",
+      "tags": ["documentation", "knowledge", "writing", "ops"],
+      "trustLevel": "curated",
+      "curated": true,
+      "free": true,
+      "notes": "Good for SOPs, FAQs, handoffs, and decision memos.",
+      "sourceType": "local",
+      "sourceRef": {
+        "path": "skills/doc-systematizer"
+      }
+    },
+    {
+      "slug": "meeting-note-synthesizer",
+      "name": "Meeting Note Synthesizer",
+      "description": "Local curated skill for turning meeting transcripts into decisions, owners, and next steps.",
+      "homepage": "https://github.com/jklop3841/openclawskillseeker",
+      "tags": ["meeting", "summary", "execution", "coordination"],
+      "trustLevel": "curated",
+      "curated": true,
+      "free": true,
+      "notes": "Optimized for fast executive summaries and action-item extraction.",
+      "sourceType": "local",
+      "sourceRef": {
+        "path": "skills/meeting-note-synthesizer"
+      }
+    },
+    {
+      "slug": "bug-triage-investigator",
+      "name": "Bug Triage Investigator",
+      "description": "Local curated skill for turning a bug report into severity, repro steps, and next debugging actions.",
+      "homepage": "https://github.com/jklop3841/openclawskillseeker",
+      "tags": ["bug", "triage", "debugging", "qa"],
+      "trustLevel": "curated",
+      "curated": true,
+      "free": true,
+      "notes": "Designed to clarify symptoms and evidence before a fix is attempted.",
+      "sourceType": "local",
+      "sourceRef": {
+        "path": "skills/bug-triage-investigator"
+      }
+    },
+    {
+      "slug": "release-readiness-checker",
+      "name": "Release Readiness Checker",
+      "description": "Local curated skill for go/no-go shipping decisions with evidence, risks, and rollback readiness.",
+      "homepage": "https://github.com/jklop3841/openclawskillseeker",
+      "tags": ["release", "qa", "readiness", "ship"],
+      "trustLevel": "curated",
+      "curated": true,
+      "free": true,
+      "notes": "Useful for final release gates and launch reviews.",
+      "sourceType": "local",
+      "sourceRef": {
+        "path": "skills/release-readiness-checker"
+      }
+    },
+    {
+      "slug": "customer-support-replier",
+      "name": "Customer Support Replier",
+      "description": "Local curated skill for drafting calm, actionable customer replies to setup issues and support requests.",
+      "homepage": "https://github.com/jklop3841/openclawskillseeker",
+      "tags": ["support", "customer", "reply", "communication"],
+      "trustLevel": "curated",
+      "curated": true,
+      "free": true,
+      "notes": "Keeps support replies clear without overpromising.",
+      "sourceType": "local",
+      "sourceRef": {
+        "path": "skills/customer-support-replier"
+      }
+    },
+    {
+      "slug": "ops-runbook-copilot",
+      "name": "Ops Runbook Copilot",
+      "description": "Local curated skill for turning deployments, incidents, and maintenance work into concrete runbooks.",
+      "homepage": "https://github.com/jklop3841/openclawskillseeker",
+      "tags": ["ops", "runbook", "incident", "deployment"],
+      "trustLevel": "curated",
+      "curated": true,
+      "free": true,
+      "notes": "Focused on prerequisites, execution order, checks, and rollback guidance.",
+      "sourceType": "local",
+      "sourceRef": {
+        "path": "skills/ops-runbook-copilot"
+      }
+    },
+    {
+      "slug": "repo-triage-coordinator",
+      "name": "Repo Triage Coordinator",
+      "description": "Local curated skill for classifying incoming repo work into bugs, enhancements, chores, and blockers.",
+      "homepage": "https://github.com/jklop3841/openclawskillseeker",
+      "tags": ["repo", "triage", "planning", "backlog"],
+      "trustLevel": "curated",
+      "curated": true,
+      "free": true,
+      "notes": "Useful for issue queue cleanup and backlog prioritization.",
+      "sourceType": "local",
+      "sourceRef": {
+        "path": "skills/repo-triage-coordinator"
+      }
+    },
+    {
+      "slug": "agency-frontend-developer",
+      "name": "Agency Frontend Developer",
+      "description": "Adapted local skill for accessible, responsive frontend implementation with explicit QA gates.",
+      "homepage": "https://github.com/msitarzewski/agency-agents",
+      "tags": ["frontend", "ui", "accessibility", "performance"],
+      "trustLevel": "curated",
+      "curated": true,
+      "free": true,
+      "notes": "Adapted from agency-agents and stored as a local curated draft.",
+      "sourceType": "local",
+      "sourceRef": {
+        "repo": "msitarzewski/agency-agents",
+        "path": "docs/agency-agents-skill-drafts/agency-frontend-developer",
+        "license": "MIT"
+      }
+    },
+    {
+      "slug": "agency-reality-checker",
+      "name": "Agency Reality Checker",
+      "description": "Adapted local skill for evidence-based readiness checks and release validation.",
+      "homepage": "https://github.com/msitarzewski/agency-agents",
+      "tags": ["qa", "evidence", "release", "verification"],
+      "trustLevel": "curated",
+      "curated": true,
+      "free": true,
+      "notes": "Adapted from agency-agents and stored as a local curated draft.",
+      "sourceType": "local",
+      "sourceRef": {
+        "repo": "msitarzewski/agency-agents",
+        "path": "docs/agency-agents-skill-drafts/agency-reality-checker",
+        "license": "MIT"
+      }
+    },
+    {
+      "slug": "agency-orchestrator",
+      "name": "Agency Orchestrator",
+      "description": "Adapted local skill for multi-phase coordination with explicit QA gates.",
+      "homepage": "https://github.com/msitarzewski/agency-agents",
+      "tags": ["workflow", "coordination", "delivery", "quality-gates"],
+      "trustLevel": "curated",
+      "curated": true,
+      "free": true,
+      "notes": "Adapted from agency-agents and stored as a local curated draft.",
+      "sourceType": "local",
+      "sourceRef": {
+        "repo": "msitarzewski/agency-agents",
+        "path": "docs/agency-agents-skill-drafts/agency-orchestrator",
+        "license": "MIT"
+      }
     }
   ],
   "packs": [
@@ -59,6 +245,67 @@
         "Designed for cautious local deployments.",
         "agent-self-assessment is intentionally kept behind explicit suspicious approval.",
         "calendar provides the live default-safe install path."
+      ]
+    },
+    {
+      "id": "agency-poc",
+      "name": "Agency PoC Pack",
+      "description": "Local curated proof of concept pack adapted from agency-agents for implementation, verification, and orchestration workflows.",
+      "skills": ["agency-frontend-developer", "agency-reality-checker", "agency-orchestrator"],
+      "patchOpenClawConfig": true,
+      "notes": [
+        "Uses local curated skills rather than live registry-only installs.",
+        "Demonstrates a safe adaptation path for third-party agent content."
+      ]
+    },
+    {
+      "id": "knowledge-work",
+      "name": "Knowledge Work Pack",
+      "description": "Local curated pack for research, briefs, docs, and meeting synthesis.",
+      "skills": [
+        "research-first-decider",
+        "product-brief-writer",
+        "doc-systematizer",
+        "meeting-note-synthesizer"
+      ],
+      "patchOpenClawConfig": true,
+      "notes": [
+        "Good default pack for founders, operators, and knowledge workers.",
+        "All skills are local curated drafts that install without live registry dependency."
+      ]
+    },
+    {
+      "id": "delivery-engine",
+      "name": "Delivery Engine Pack",
+      "description": "Local curated pack for implementation orchestration, bug triage, and release checks.",
+      "skills": [
+        "agency-orchestrator",
+        "agency-frontend-developer",
+        "agency-reality-checker",
+        "bug-triage-investigator",
+        "release-readiness-checker",
+        "repo-triage-coordinator"
+      ],
+      "patchOpenClawConfig": true,
+      "notes": [
+        "Built to cover build-ship-fix loops with explicit QA gates.",
+        "Combines adapted agency workflow skills with local triage and release helpers."
+      ]
+    },
+    {
+      "id": "business-ops",
+      "name": "Business Ops Pack",
+      "description": "Local curated pack for support replies, operations runbooks, and cross-functional execution.",
+      "skills": [
+        "customer-support-replier",
+        "ops-runbook-copilot",
+        "repo-triage-coordinator",
+        "product-brief-writer"
+      ],
+      "patchOpenClawConfig": true,
+      "notes": [
+        "Designed to make a fresh OpenClaw instance feel useful for real business work quickly.",
+        "Focuses on support, coordination, and operational clarity rather than raw tool count."
       ]
     }
   ]
