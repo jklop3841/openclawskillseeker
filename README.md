@@ -1,71 +1,46 @@
-# OpenClaw Skill Center
+# OpenClaw机械外骨骼
 
-Safer local sidecar for curated OpenClaw skill installs.
+给 OpenClaw 穿上一层真正可用的机械外骨骼。
 
-OpenClaw Skill Center validates skills, installs them into isolated directories, and verifies real filesystem evidence before you add those skills to your OpenClaw environment.
+`OpenClaw机械外骨骼` 是一个本地 sidecar 应用，用来把技能安装、接入、验证、回滚这条链路产品化。它不修改 OpenClaw 本体，默认走 whitelist-first，只把技能装进隔离目录，再把可验证的技能目录接入 OpenClaw。
 
-## Why It Exists
+## 现在能做什么
 
-Installing third-party OpenClaw skills directly is fast, but it is also easy to lose track of:
+- 一键安装并接入经过验证的 `calendar` 技能
+- 支持最小安全演示包 `demo-safe`
+- 自动检测环境、安装、接入、验证
+- 严格校验 `SKILL.md`、`.clawhub/origin.json`、`.clawhub/lock.json`
+- 接入失败时给出人话解释，而不是只吐技术错误
+- 提供本地回滚入口，避免把 OpenClaw 主环境搞乱
 
-- what was installed
-- where files landed
-- whether a skill was skipped for safety reasons
-- whether installation actually produced a valid `SKILL.md` layout
+## 产品定位
 
-OpenClaw Skill Center adds a controlled sidecar layer around that process.
+- `sidecar`：独立于 OpenClaw core
+- `whitelist-first`：默认不绕过 suspicious 技能门禁
+- `isolated install`：技能先落到隔离目录
+- `auditable`：文件级验证，不靠“看起来像成功”
+- `windows-first`：兼容 `clawhub.cmd` 和桌面应用分发
 
-## Positioning
+## 黄金路径
 
-- Sidecar architecture: separate from OpenClaw core
-- Whitelist-first defaults: suspicious skills skipped by default
-- Isolated installs: target directories stay outside OpenClaw core
-- Auditable verification: check `SKILL.md`, `origin.json`, and `lock.json`
-- Windows-friendly: explicit `clawhub.cmd` support
-
-## Current Status
-
-`v0.3.0-demoable-safe`
-
-This version freezes one proven golden path:
-
-- Single skill: `calendar`
-- Minimal pack: `demo-safe`
-
-Golden path:
+当前版本已经冻结了一条可演示、可复现、可解释的主链路：
 
 1. `validate-skill calendar`
 2. `install-skill calendar`
 3. `verify-pack-layout --verbose`
 
-## What It Proves
+这条链已经真实跑通，证明了四件事：
 
-This prototype already proves four core claims:
+1. 不改 OpenClaw 本体
+2. 技能隔离安装
+3. 默认安全策略有效
+4. 结果可验证、可审计
 
-1. It does not modify OpenClaw core.
-2. It installs into an isolated target directory.
-3. It keeps a whitelist-first safety posture.
-4. It verifies the resulting filesystem layout.
+## 桌面版
 
-## Minimal Demo
+当前仓库已经包含桌面壳源码，产品名为 `OpenClaw机械外骨骼`。
 
-Windows PowerShell:
-
-```powershell
-Set-Location D:\AI\backlup
-
-npx tsx apps\cli\src\index.ts validate-skill calendar --clawhub-bin C:\Users\Administrator\AppData\Roaming\npm\clawhub.cmd
-
-Remove-Item D:\temp\openclaw-skill-center\calendar -Recurse -Force -ErrorAction SilentlyContinue
-
-npx tsx apps\cli\src\index.ts install-skill calendar --targetDir D:\temp\openclaw-skill-center\calendar --clawhub-bin C:\Users\Administrator\AppData\Roaming\npm\clawhub.cmd
-
-npx tsx apps\cli\src\index.ts verify-pack-layout D:\temp\openclaw-skill-center\calendar --verbose
-```
-
-## Personal App Preview
-
-To launch the current desktop-shell prototype:
+本地启动预览：
 
 ```powershell
 Set-Location D:\AI\backlup
@@ -73,50 +48,51 @@ npm install
 npm run start:desktop
 ```
 
-What the user sees first:
+应用首页会直接展示：
 
-- environment status
-- one-click `Install and attach Calendar`
-- optional `Install demo-safe pack`
-- `Undo last attach`
-- plain-language success or failure guidance
+- 环境状态
+- `一键安装并接入 Calendar`
+- `安装 demo-safe 演示包`
+- `撤销上次接入`
+- 普通用户可读的成功 / 失败说明
 
-## Successful Install Evidence
+## 安装证据
 
-Expected evidence under the isolated target directory:
+成功安装后，隔离目录中应当至少出现：
 
 - `<targetDir>\.clawhub\lock.json`
 - `<targetDir>\skills\calendar\SKILL.md`
 - `<targetDir>\skills\calendar\.clawhub\origin.json`
 
-## Who This Is For
+## 适合谁
 
-- OpenClaw users who want safer local skill installs
-- Windows users running with explicit `clawhub.cmd`
-- Builders who need a demonstrable sidecar prototype before investing in a larger UI or catalog
+- 想更安全地给 OpenClaw 加技能的用户
+- 不想自己手动 patch config 的用户
+- 希望先看见“真实落盘和验证结果”再接入的团队
+- 想把 OpenClaw 技能接入做成可演示产品的人
 
-## What This Is Not Yet
+## 还不是什么
 
-- Not a hosted registry
-- Not a cloud sync product
-- Not a full multi-pack commercial suite
-- Not a replacement for OpenClaw itself
+- 还不是 hosted registry
+- 还不是完整商业技能市场
+- 还不是 OpenClaw 的替代品
+- 还不是零依赖、零环境要求的最终大众版
 
-## Reports
+## 报告与验证
 
-Install reports are written to:
+安装报告会写到：
 
 - `~/.openclaw-skill-center/reports`
 
-CLI install commands also print a short human-readable summary:
+CLI 和桌面版都会输出用户可读摘要，包括：
 
-- what was installed
-- what was skipped
-- why anything was skipped
-- where files were written
-- how to verify success
+- 装了什么
+- 跳过了什么
+- 为什么跳过
+- 文件落在哪里
+- 如何确认成功
 
-## Docs
+## 文档
 
 - [Quick Demo Guide](/D:/AI/backlup/docs/DEMO.md)
 - [Install Guide](/D:/AI/backlup/docs/INSTALL.md)
@@ -126,7 +102,7 @@ CLI install commands also print a short human-readable summary:
 - [Sales Page Draft](/D:/AI/backlup/docs/SALES_PAGE.md)
 - [Failure Explanation Templates](/D:/AI/backlup/docs/FAILURE_PLAYBOOK.md)
 
-## Development
+## 开发
 
 ```powershell
 npm install
