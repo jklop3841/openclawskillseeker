@@ -5,6 +5,7 @@ import type {
   Catalog,
   CatalogPack,
   CatalogSkill,
+  DoctorCheck,
   DoctorReport,
   InstallExecutionReport
 } from "@openclaw-skill-center/shared";
@@ -35,17 +36,17 @@ const featuredSkillSlugs = [
 ] as const;
 
 const packAudience: Record<string, string> = {
-  "demo-safe": "适合第一次试装和演示验证",
-  "knowledge-work": "适合创始人、运营和知识工作者",
-  "delivery-engine": "适合产品、研发和交付团队",
-  "business-ops": "适合客服、运维和业务协同"
+  "demo-safe": "第一次试装和演示验证",
+  "knowledge-work": "创始人、运营、研究和文档工作者",
+  "delivery-engine": "产品、研发和交付团队",
+  "business-ops": "客服、运维和业务协同岗位"
 };
 
 const packOutcome: Record<string, string> = {
-  "demo-safe": "帮你快速验证 OpenClaw 是否能完成一条稳定接入链路。",
-  "knowledge-work": "帮你更快做研究、写简报、整理文档、沉淀会议结论。",
-  "delivery-engine": "帮你梳理 bug、把关发布、推进执行和排 backlog。",
-  "business-ops": "帮你更快回复客户、沉淀 runbook、提升跨团队协作效率。"
+  "demo-safe": "快速验证 OpenClaw 是否已经具备一条稳定可用的技能接入链路。",
+  "knowledge-work": "整理信息、写简报、沉淀会议结论、形成结构化文档。",
+  "delivery-engine": "梳理 bug、推进发布、整理执行事项和 backlog。",
+  "business-ops": "沉淀 runbook、统一客服回复、提升跨团队协作效率。"
 };
 
 const packTier: Record<string, string> = {
@@ -55,24 +56,7 @@ const packTier: Record<string, string> = {
   "business-ops": "Ops Suite"
 };
 
-function failureHint(result: AttachFlowResult | null) {
-  switch (result?.failureCategory) {
-    case "clawhub-not-found":
-      return "系统没找到官方 clawhub 安装器，请先把 clawhub 装好。";
-    case "suspicious-skipped":
-      return "这个技能被上游标记为高风险，所以默认没有继续安装。";
-    case "verify-failed":
-      return "安装命令已经返回，但系统没有在预期位置验证到完整技能文件。";
-    case "install-retriable":
-      return "上游仓库当前限流，系统已经重试过，建议稍后再试。";
-    case "install-failed":
-      return "安装过程遇到了永久性错误，需要检查具体技能或环境。";
-    case "attach-failed":
-      return "技能可能已经安装，但 OpenClaw 配置还没有成功写入。";
-    default:
-      return "";
-  }
-}
+type EnvironmentStatus = "ready" | "needs attention" | "blocked" | "loading";
 
 function sourceLabel(skill: CatalogSkill) {
   if (skill.sourceType === "local") {
@@ -99,19 +83,142 @@ function trustLabel(skill: CatalogSkill) {
   }
 }
 
+function statusLabel(status: EnvironmentStatus) {
+  switch (status) {
+    case "ready":
+      return "ready";
+    case "needs attention":
+      return "needs attention";
+    case "blocked":
+      return "blocked";
+    default:
+      return "loading";
+  }
+}
+
+function failureHint(result: AttachFlowResult | null) {
+  switch (result?.failureCategory) {
+    case "clawhub-not-found":
+      return "系统没有找到官方 clawhub 安装器。";
+    case "suspicious-skipped":
+      return "这个技能被上游标记为高风险，系统默认没有继续安装。";
+    case "verify-failed":
+      return "安装命令执行过，但系统没有在预期位置验证到完整技能文件。";
+    case "install-retriable":
+      return "上游仓库暂时限流，系统已经自动重试过。";
+    case "install-failed":
+      return "安装过程遇到了永久性错误，需要查看高级信息。";
+    case "attach-failed":
+      return "技能可能已经装好，但 OpenClaw 配置还没有成功写入。";
+    default:
+      return "";
+  }
+}
+
 function summarizeInstall(pack: CatalogPack, report: InstallExecutionReport) {
   const lines = [
-    `已处理 ${pack.name}。`,
-    `已安装 ${report.installed.length} 个技能。`,
-    `已跳过 ${report.skipped.length} 个技能。`,
-    `可重试失败 ${report.failedRetriable.length} 个，永久失败 ${report.failedPermanent.length} 个。`
+    `已处理能力包：${pack.name}`,
+    `已安装 ${report.installed.length} 个技能`,
+    `已跳过 ${report.skipped.length} 个技能`,
+    `可重试失败 ${report.failedRetriable.length} 个，永久失败 ${report.failedPermanent.length} 个`
   ];
 
   if (report.installed.length > 0) {
-    lines.push("已尝试把这个能力包接入 OpenClaw，建议现在重启 OpenClaw。");
+    lines.push("系统已经尝试把这个能力包接入 OpenClaw，建议现在重启 OpenClaw。");
   }
 
   return lines;
+}
+
+function nextActionForEnvironment(report: DoctorReport | null, status: EnvironmentStatus) {
+  if (!report || status === "loading") {
+    return "正在检查当前环境，请稍等。";
+  }
+
+  if (!report.clawhubFound) {
+    return "先把官方 clawhub 安装好，然后回到这里重新检测。";
+  }
+
+  const configCheck = report.checks.find((check) => check.name === "openclaw-config");
+  if (configCheck && !configCheck.ok) {
+    return "系统没有检测到可用的 OpenClaw 配置文件，请先确认 OpenClaw 已经正确安装并启动过。";
+  }
+
+  if (status === "ready") {
+    return "环境已经就绪。现在可以直接点击 Install and attach Calendar。";
+  }
+
+  return "环境基本可用，但还有几项需要注意。先看下面的修复建议，再开始安装。";
+}
+
+function guidanceForCheck(check: DoctorCheck) {
+  switch (check.name) {
+    case "clawhub":
+      return "缺少 clawhub 时，系统无法开始安装技能。";
+    case "openclaw-config":
+      return "没有找到 OpenClaw 配置时，系统无法把技能挂进去。";
+    case "openclaw-workspace":
+      return "找不到 workspace 不一定阻塞，但会影响默认路径判断。";
+    case "wsl":
+      return "如果你的 OpenClaw 跑在 WSL，这里会影响路径选择。";
+    default:
+      return check.summary;
+  }
+}
+
+function buildRepairCards(report: DoctorReport | null, status: EnvironmentStatus) {
+  if (!report || status === "loading") {
+    return [];
+  }
+
+  const cards: Array<{ title: string; body: string; action: string; level: "blocked" | "warning" }> = [];
+  const configCheck = report.checks.find((check) => check.name === "openclaw-config");
+
+  if (!report.clawhubFound) {
+    cards.push({
+      title: "先安装 clawhub",
+      body: "没有 clawhub，系统就不能真正下载和安装技能。",
+      action: "先把官方 clawhub CLI 安装好，然后回到这里点 Retry environment check。",
+      level: "blocked"
+    });
+  }
+
+  if (configCheck && !configCheck.ok) {
+    cards.push({
+      title: "先让 OpenClaw 生成配置",
+      body: "系统没有找到可写的 OpenClaw 配置文件，所以暂时无法自动接入。",
+      action: "先启动一次 OpenClaw，确认 openclaw.json 已生成，然后再回来继续。",
+      level: "blocked"
+    });
+  }
+
+  if (report.platform === "win32" && report.wslAvailable && !report.isWsl) {
+    cards.push({
+      title: "确认你的 OpenClaw 运行位置",
+      body: "这台机器同时具备 Windows 和 WSL 环境，路径格式会影响技能接入位置。",
+      action: "如果你的 OpenClaw 跑在 Windows，就继续当前模式；如果跑在 WSL，后续请按提示选择 WSL 路径。",
+      level: "warning"
+    });
+  }
+
+  if (status === "ready") {
+    cards.push({
+      title: "环境已就绪",
+      body: "现在可以直接开始一键接入，无需自己处理 paths、extraDirs 或 SKILL.md。",
+      action: "点击 Install and attach Calendar，完成后重启 OpenClaw。",
+      level: "warning"
+    });
+  }
+
+  return cards;
+}
+
+function guidedPrompt(success: boolean) {
+  if (!success) {
+    return "";
+  }
+
+  return "请检查你当前是否已加载 calendar skill。如果已加载，请用它帮我查看今天的日程。";
 }
 
 export function App() {
@@ -119,14 +226,14 @@ export function App() {
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [state, setState] = useState<AppState | null>(null);
   const [attachResult, setAttachResult] = useState<AttachFlowResult | null>(null);
-  const [message, setMessage] = useState<string>("");
+  const [message, setMessage] = useState("");
   const [busy, setBusy] = useState(false);
   const [resultLines, setResultLines] = useState<string[]>([]);
-  const [nextStep, setNextStep] = useState<string>("");
+  const [nextStep, setNextStep] = useState("");
   const [advancedPayload, setAdvancedPayload] = useState<unknown>(null);
-  const [actionLabel, setActionLabel] = useState<string>("尚未执行");
-  const [failureTitle, setFailureTitle] = useState<string>("");
-  const [failureBody, setFailureBody] = useState<string>("");
+  const [actionLabel, setActionLabel] = useState("尚未执行");
+  const [failureTitle, setFailureTitle] = useState("");
+  const [failureBody, setFailureBody] = useState("");
 
   async function refresh() {
     const [doctorData, catalogData, stateData] = await Promise.all([
@@ -140,15 +247,15 @@ export function App() {
   }
 
   useEffect(() => {
-    refresh().catch((error) => setMessage(error.message));
+    refresh().catch((error) => setMessage(error instanceof Error ? error.message : String(error)));
   }, []);
 
   async function runAttach(kind: "calendar" | "demo-safe") {
     setBusy(true);
     setMessage("");
-    setActionLabel(kind === "calendar" ? "安装并接入 Calendar" : "安装并接入 demo-safe");
 
     try {
+      setActionLabel(kind === "calendar" ? "Install and attach Calendar" : "Install demo-safe");
       const result = await getJson<AttachFlowResult>(`/api/attach/${kind}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" }
@@ -162,9 +269,10 @@ export function App() {
       setMessage(result.success ? "已完成接入。重启 OpenClaw 后就可以开始使用。" : result.nextStep);
       await refresh();
     } catch (error) {
+      const text = error instanceof Error ? error.message : String(error);
       setFailureTitle("请求失败");
-      setFailureBody(error instanceof Error ? error.message : String(error));
-      setMessage(error instanceof Error ? error.message : String(error));
+      setFailureBody(text);
+      setMessage(text);
     } finally {
       setBusy(false);
     }
@@ -174,7 +282,7 @@ export function App() {
     setBusy(true);
     setMessage("");
     setAttachResult(null);
-    setActionLabel(`安装能力包: ${pack.name}`);
+    setActionLabel(`安装能力包 ${pack.name}`);
 
     try {
       const result = await getJson<{
@@ -196,15 +304,16 @@ export function App() {
       );
       setFailureBody(
         result.installReport.failedPermanent.length > 0 || result.installReport.failedRetriable.length > 0
-          ? "有部分技能未完成安装，请展开高级信息查看明细。"
+          ? "有部分技能未完成安装。请展开高级信息查看明细。"
           : ""
       );
       setMessage(`已完成 ${pack.name} 的安装流程。`);
       await refresh();
     } catch (error) {
+      const text = error instanceof Error ? error.message : String(error);
       setFailureTitle("能力包安装失败");
-      setFailureBody(error instanceof Error ? error.message : String(error));
-      setMessage(error instanceof Error ? error.message : String(error));
+      setFailureBody(text);
+      setMessage(text);
     } finally {
       setBusy(false);
     }
@@ -219,6 +328,7 @@ export function App() {
 
     setBusy(true);
     setActionLabel("撤销上次接入");
+
     try {
       const result = await getJson("/api/rollback", {
         method: "POST",
@@ -234,30 +344,22 @@ export function App() {
       setMessage("上次接入已撤销。");
       await refresh();
     } catch (error) {
+      const text = error instanceof Error ? error.message : String(error);
       setFailureTitle("撤销失败");
-      setFailureBody(error instanceof Error ? error.message : String(error));
-      setMessage(error instanceof Error ? error.message : String(error));
+      setFailureBody(text);
+      setMessage(text);
     } finally {
       setBusy(false);
     }
   }
 
-  const environmentStatus = !doctor
+  const environmentStatus: EnvironmentStatus = !doctor
     ? "loading"
     : !doctor.clawhubFound
       ? "blocked"
       : doctor.checks.every((check) => check.ok)
         ? "ready"
         : "needs attention";
-
-  const statusLabel =
-    environmentStatus === "ready"
-      ? "ready"
-      : environmentStatus === "blocked"
-        ? "blocked"
-        : environmentStatus === "needs attention"
-          ? "needs attention"
-          : "loading";
 
   const featuredPacks = useMemo(
     () => featuredPackIds.map((id) => catalog?.packs.find((pack) => pack.id === id)).filter(Boolean) as CatalogPack[],
@@ -273,29 +375,31 @@ export function App() {
   );
 
   const installedSummary = state?.installedPacks ?? [];
+  const problematicChecks = doctor?.checks.filter((check) => !check.ok) ?? [];
+  const successPrompt = guidedPrompt(Boolean(attachResult?.success));
+  const repairCards = buildRepairCards(doctor, environmentStatus);
 
   return (
     <main className="shell">
       <section className="hero">
         <div className="hero-copy">
           <p className="eyebrow">OpenClaw机械外骨骼</p>
-          <h1>给 OpenClaw 装上一层真正能干活的精选能力包。</h1>
+          <h1>第一次打开，先用向导把 OpenClaw 接起来。</h1>
           <p className="subtle lead">
-            这不是另一个 OpenClaw，而是面向 OpenClaw 的精选技能发行与增强层。你不需要理解路径、
-            extraDirs、SKILL.md 或命令行，只要点一次，系统就会自动完成检测、安装、接入和验证。
+            你不需要理解 OpenClaw、clawhub、路径、extraDirs 或 SKILL.md。系统会先检查环境，再告诉你现在是直接开始，还是先修一点点问题。
           </p>
           <div className="hero-points">
-            <span>whitelist-first</span>
-            <span>隔离安装</span>
+            <span>先检测</span>
+            <span>再安装</span>
             <span>自动接入</span>
-            <span>落盘验证</span>
+            <span>自动验证</span>
           </div>
           <div className="hero-brand">
             <div className="hot-badge">HOT!</div>
             <div>
               <p className="brand-title">OpenClaw</p>
               <p className="brand-subtitle">机械外骨骼任务中心</p>
-              <p className="brand-copy">把开放技能生态变成可安装、可接入、可验证的增强系统。</p>
+              <p className="brand-copy">让普通用户也能把精选技能安全地装进 OpenClaw。</p>
             </div>
           </div>
         </div>
@@ -305,18 +409,21 @@ export function App() {
         </div>
 
         <div className="hero-action-card">
-          <h2>主入口</h2>
-          <p>如果你只想先验证一条最稳的链路，先装 Calendar。它是当前最稳定的单技能演示对象。</p>
-          <button className="primary" disabled={busy} onClick={() => void runAttach("calendar")}>
+          <h2>开始使用</h2>
+          <p>{nextActionForEnvironment(doctor, environmentStatus)}</p>
+          <button className="primary" disabled={busy || environmentStatus === "blocked"} onClick={() => void runAttach("calendar")}>
             {busy ? "执行中..." : "Install and attach Calendar"}
           </button>
           <button disabled={busy} onClick={() => void runAttach("demo-safe")}>
             {busy ? "执行中..." : "Install demo-safe"}
           </button>
+          <button disabled={busy} onClick={() => void refresh()}>
+            Retry environment check
+          </button>
           <button disabled={busy} onClick={() => void rollbackLatest()}>
             Undo last attach
           </button>
-          <p className="subtle small">安装完成后，这里会明确告诉你是否需要重启 OpenClaw。</p>
+          <p className="subtle small">主推荐入口仍然是 Calendar。先把这条黄金路径跑通，再扩更多能力包。</p>
         </div>
       </section>
 
@@ -324,16 +431,16 @@ export function App() {
 
       <section className="grid">
         <article className="panel">
-          <h2>环境状态</h2>
+          <h2>环境准备向导</h2>
           <div className="stat">
-            <span>状态</span>
+            <span>环境状态</span>
             <strong className={environmentStatus === "ready" ? "ok" : environmentStatus === "blocked" ? "fail" : ""}>
-              {statusLabel}
+              {statusLabel(environmentStatus)}
             </strong>
           </div>
           <div className="stat">
             <span>clawhub</span>
-            <strong className={doctor?.clawhubFound ? "ok" : "fail"}>{doctor?.clawhubFound ? "已就绪" : "缺失"}</strong>
+            <strong className={doctor?.clawhubFound ? "ok" : "fail"}>{doctor?.clawhubFound ? "已检测到" : "未检测到"}</strong>
           </div>
           <div className="stat">
             <span>OpenClaw 配置</span>
@@ -343,6 +450,25 @@ export function App() {
             <span>环境模式</span>
             <strong>{attachResult?.environmentMode ?? doctor?.platform ?? "..."}</strong>
           </div>
+          <div className="stat">
+            <span>当前动作</span>
+            <strong>{actionLabel}</strong>
+          </div>
+        </article>
+
+        <article className="panel">
+          <h2>需要注意什么</h2>
+          {problematicChecks.length > 0 ? (
+            problematicChecks.map((check) => (
+              <div className="stat" key={check.name}>
+                <span>{check.name}</span>
+                <strong className="fail">{check.summary}</strong>
+                <p className="subtle checklist-note">{guidanceForCheck(check)}</p>
+              </div>
+            ))
+          ) : (
+            <p className="subtle">环境已经达到可安装状态。现在可以直接开始一键接入。</p>
+          )}
         </article>
 
         <article className="panel">
@@ -358,18 +484,29 @@ export function App() {
             <p className="subtle">当前还没有检测到已接入的精选能力包。</p>
           )}
         </article>
+      </section>
 
-        <article className="panel">
-          <h2>最近动作</h2>
-          <div className="stat">
-            <span>动作</span>
-            <strong>{actionLabel}</strong>
+      <section className="panel">
+        <div className="section-head">
+          <div>
+            <h2>自动修复建议</h2>
+            <p className="subtle">如果你看到 blocked 或 needs attention，先看这里。系统会先告诉你该修哪一步。</p>
           </div>
-          <div className="stat">
-            <span>下一步</span>
-            <strong>{nextStep || "等待你点击安装。"}</strong>
-          </div>
-        </article>
+        </div>
+        <div className="repair-grid">
+          {repairCards.map((card) => (
+            <article className={`repair-card repair-${card.level}`} key={card.title}>
+              <div className="catalog-topline">
+                <span className={`chip ${card.level === "blocked" ? "chip-danger" : "chip-warning"}`}>
+                  {card.level === "blocked" ? "blocked" : "needs attention"}
+                </span>
+              </div>
+              <h3>{card.title}</h3>
+              <p>{card.body}</p>
+              <p className="catalog-meta"><strong>下一步：</strong>{card.action}</p>
+            </article>
+          ))}
+        </div>
       </section>
 
       <section className="panel">
@@ -388,7 +525,7 @@ export function App() {
               </div>
               <h3>{pack.name}</h3>
               <p>{pack.description}</p>
-              <p className="catalog-meta"><strong>适合谁：</strong>{packAudience[pack.id] ?? "适合需要快速增强 OpenClaw 的用户"}</p>
+              <p className="catalog-meta"><strong>适合谁：</strong>{packAudience[pack.id] ?? "需要快速增强 OpenClaw 的用户"}</p>
               <p className="catalog-meta"><strong>能帮你做什么：</strong>{packOutcome[pack.id] ?? pack.description}</p>
               <div className="store-stats">
                 <div>
@@ -485,6 +622,12 @@ export function App() {
               <p>
                 下一步：<strong>{nextStep}</strong>
               </p>
+              {successPrompt ? (
+                <div className="prompt-box">
+                  <span className="store-label">成功后去 OpenClaw 里这样测</span>
+                  <p>{successPrompt}</p>
+                </div>
+              ) : null}
             </div>
           ) : (
             <p className="subtle">安装完成后，这里会用普通用户能看懂的话说明结果。</p>
@@ -499,7 +642,7 @@ export function App() {
               {failureBody ? <p>{failureBody}</p> : null}
             </>
           ) : (
-            <p className="subtle">只有真的需要用户处理时，这里才会显示失败解释和建议动作。</p>
+            <p className="subtle">只有真的需要你处理时，这里才会显示失败解释和建议动作。</p>
           )}
         </article>
       </section>

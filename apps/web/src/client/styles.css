@@ -262,6 +262,32 @@ button:disabled {
   gap: 1rem;
 }
 
+.repair-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.repair-card {
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  padding: 1.1rem;
+  background: rgba(255, 255, 255, 0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.repair-blocked {
+  border-color: rgba(255, 138, 138, 0.24);
+  background: rgba(78, 14, 18, 0.32);
+}
+
+.repair-warning {
+  border-color: rgba(255, 179, 71, 0.24);
+  background: rgba(74, 48, 11, 0.28);
+}
+
 .catalog-card {
   border: 1px solid var(--line);
   border-radius: 22px;
@@ -305,6 +331,10 @@ button:disabled {
 .catalog-meta {
   color: var(--muted);
   font-size: 0.94rem;
+}
+
+.checklist-note {
+  margin: 0.2rem 0 0;
 }
 
 .store-stats {
@@ -359,6 +389,16 @@ button:disabled {
 .chip-local {
   background: rgba(87, 215, 255, 0.12);
   border-color: rgba(87, 215, 255, 0.24);
+}
+
+.chip-danger {
+  background: rgba(255, 138, 138, 0.14);
+  border-color: rgba(255, 138, 138, 0.3);
+}
+
+.chip-warning {
+  background: rgba(255, 179, 71, 0.14);
+  border-color: rgba(255, 179, 71, 0.3);
 }
 
 .card-actions {
@@ -417,6 +457,18 @@ button:disabled {
 
 .summary-list p {
   margin: 0.55rem 0;
+}
+
+.prompt-box {
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border-radius: 16px;
+  border: 1px solid rgba(87, 215, 255, 0.2);
+  background: rgba(10, 24, 38, 0.72);
+}
+
+.prompt-box p {
+  margin: 0.35rem 0 0;
 }
 
 pre {
