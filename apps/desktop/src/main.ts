@@ -1,8 +1,7 @@
 import { app, BrowserWindow } from "electron";
-import { spawn, type ChildProcess } from "node:child_process";
 import net from "node:net";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { createWindowOptions, resolveDesktopIcon, resolveWebServerEntry, resolveWebUrl } from "./window.js";
 
 const desktopDir = path.dirname(fileURLToPath(import.meta.url));
@@ -12,7 +11,7 @@ const webServerEntry = resolveWebServerEntry(resourcesBase, app.isPackaged);
 const webUrl = resolveWebUrl();
 const iconPath = resolveDesktopIcon(resourcesBase, app.isPackaged);
 
-let webServerProcess: ChildProcess | null = null;
+let webServerStarted = false;
 
 function waitForPort(port: number, timeoutMs = 20000) {
   const start = Date.now();
@@ -39,23 +38,21 @@ function waitForPort(port: number, timeoutMs = 20000) {
   });
 }
 
-function ensureWebServer() {
-  if (webServerProcess && !webServerProcess.killed) {
+async function ensureWebServer() {
+  if (webServerStarted) {
     return;
   }
 
-  webServerProcess = spawn(process.execPath, [webServerEntry], {
-    cwd: path.resolve(desktopDir, "..", ".."),
-    env: {
-      ...process.env,
-      PORT: "47221"
-    },
-    stdio: "inherit"
-  });
+  process.env.PORT = "47221";
+  const webServerModule = await import(pathToFileURL(webServerEntry).href);
+  if (typeof webServerModule.startWebServer === "function") {
+    webServerModule.startWebServer();
+  }
+  webServerStarted = true;
 }
 
 async function createMainWindow() {
-  ensureWebServer();
+  await ensureWebServer();
   await waitForPort(47221);
 
   const window = new BrowserWindow(createWindowOptions(preloadPath, iconPath));
@@ -75,11 +72,5 @@ app.whenReady().then(async () => {
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     app.quit();
-  }
-});
-
-app.on("before-quit", () => {
-  if (webServerProcess && !webServerProcess.killed) {
-    webServerProcess.kill();
   }
 });
