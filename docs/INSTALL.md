@@ -20,6 +20,7 @@ C:\Users\Administrator\AppData\Roaming\npm\clawhub.cmd
 2. Run `npm run build`
 3. Run `npx tsx apps\cli\src\index.ts doctor --clawhub-bin C:\Users\Administrator\AppData\Roaming\npm\clawhub.cmd`
 4. Follow the golden-path demo in [DEMO.md](/D:/AI/backlup/docs/DEMO.md)
+5. Use `demo-safe` if you want the minimal pack path instead of the single-skill path
 
 ## Windows note
 

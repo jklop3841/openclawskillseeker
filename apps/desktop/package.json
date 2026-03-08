@@ -1,8 +1,8 @@
 {
   "name": "@openclaw-skill-center/desktop",
   "version": "0.1.0",
-  "description": "OpenClaw机械外骨骼 personal desktop app",
-  "author": "OpenClaw机械外骨骼",
+  "description": "OpenClaw Exoskeleton personal desktop app",
+  "author": "OpenClaw Exoskeleton",
   "private": true,
   "type": "module",
   "main": "dist/src/main.js",
@@ -18,7 +18,8 @@
   },
   "build": {
     "appId": "ai.openclaw.exoskeleton",
-    "productName": "OpenClaw机械外骨骼",
+    "productName": "OpenClaw Exoskeleton",
+    "executableName": "OpenClaw-Exoskeleton",
     "npmRebuild": false,
     "directories": {
       "output": "release"

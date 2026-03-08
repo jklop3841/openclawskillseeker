@@ -7,7 +7,8 @@ $workRoot = Join-Path $releaseRoot "iexpress-build"
 $payloadZip = Join-Path $workRoot "payload.zip"
 $installCmd = Join-Path $workRoot "install.cmd"
 $sedPath = Join-Path $workRoot "openclaw-exoskeleton.sed"
-$targetExe = Join-Path $releaseRoot "OpenClaw-Exoskeleton-Setup.exe"
+$targetExeBase = Join-Path $releaseRoot "OpenClaw-Exoskeleton-Setup.exe"
+$targetExe = $targetExeBase
 
 if (!(Test-Path $unpackedRoot)) {
   throw "Missing win-unpacked output at $unpackedRoot. Build the desktop package first."
@@ -27,8 +28,8 @@ setlocal
 set "APPDIR=%LOCALAPPDATA%\Programs\OpenClawExoskeleton"
 if not exist "%APPDIR%" mkdir "%APPDIR%"
 powershell -NoProfile -ExecutionPolicy Bypass -Command "Expand-Archive -Path '%~dp0payload.zip' -DestinationPath '%APPDIR%' -Force"
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$s=(New-Object -ComObject WScript.Shell).CreateShortcut([Environment]::GetFolderPath('Desktop') + '\OpenClaw机械外骨骼.lnk'); $s.TargetPath='%APPDIR%\OpenClaw机械外骨骼.exe'; $s.WorkingDirectory='%APPDIR%'; $s.IconLocation='%APPDIR%\OpenClaw机械外骨骼.exe,0'; $s.Save()"
-start "" "%APPDIR%\OpenClaw机械外骨骼.exe"
+powershell -NoProfile -ExecutionPolicy Bypass -Command "$s=(New-Object -ComObject WScript.Shell).CreateShortcut([Environment]::GetFolderPath('Desktop') + '\OpenClaw Exoskeleton.lnk'); $s.TargetPath='%APPDIR%\OpenClaw-Exoskeleton.exe'; $s.WorkingDirectory='%APPDIR%'; $s.IconLocation='%APPDIR%\OpenClaw-Exoskeleton.exe,0'; $s.Save()"
+start "" "%APPDIR%\OpenClaw-Exoskeleton.exe"
 endlocal
 '@
 
@@ -65,6 +66,17 @@ payload.zip=
 "@
 
 Set-Content -Path $sedPath -Value $sedBody -Encoding ASCII
+
+if (Test-Path $targetExeBase) {
+  try {
+    Remove-Item $targetExeBase -Force -ErrorAction Stop
+  } catch {
+    $stamp = Get-Date -Format "yyyyMMdd-HHmmss"
+    $targetExe = Join-Path $releaseRoot "OpenClaw-Exoskeleton-Setup-$stamp.exe"
+    $sedBody = $sedBody -replace [regex]::Escape($targetExeBase), [System.Text.RegularExpressions.Regex]::Escape($targetExe).Replace("\\", "\")
+    Set-Content -Path $sedPath -Value $sedBody -Encoding ASCII
+  }
+}
 
 Start-Process -FilePath "$env:WINDIR\System32\iexpress.exe" -ArgumentList "/N `"$sedPath`"" -Wait -NoNewWindow
 
