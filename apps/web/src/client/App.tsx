@@ -301,6 +301,28 @@ function buildModeRationale(currentScenario: { scenario: (typeof workScenarios)[
   };
 }
 
+function buildGuidedJourney(currentScenario: { scenario: (typeof workScenarios)[number]; pack: ManagedLibrary["packs"][number] } | null) {
+  if (currentScenario) {
+    return {
+      title: `You are set up for ${currentScenario.scenario.title}`,
+      steps: [
+        `Keep ${currentScenario.pack.name} as the active mode.`,
+        "Restart OpenClaw so it reloads the current active skills.",
+        `Use one ${currentScenario.scenario.title.toLowerCase()} request to confirm the mode is working.`
+      ]
+    };
+  }
+
+  return {
+    title: "Start with one focused task mode",
+    steps: [
+      "Choose one task card below.",
+      "Switch OpenClaw to that matching mode.",
+      "Restart OpenClaw and test with the copied prompt."
+    ]
+  };
+}
+
 function managedActionNoun(mode: ManagedLibraryActivation["mode"]) {
   if (mode === "switch-pack" || mode === "switch-skill") return "switched";
   if (mode === "deactivate-all") return "cleared";
@@ -737,10 +759,15 @@ export function App() {
     () => scenarioPacks.find(({ pack }) => pack.active) ?? null,
     [scenarioPacks]
   );
+  const paperFactoryTask = useMemo(
+    () => taskCards.find(({ task }) => task.packId === "paper-factory") ?? null,
+    [taskCards]
+  );
   const repairCards = buildRepairCards(setupStatus);
   const prompt = buildPrompt(managedResult, attachResult);
   const promptCard = buildScenarioPromptCard(currentScenario, prompt);
   const modeRationale = buildModeRationale(currentScenario, managedLibrary);
+  const guidedJourney = buildGuidedJourney(currentScenario);
   const previousModeAction = useMemo(() => {
     if (!managedLibrary?.recentActions.length) {
       return null;
@@ -847,6 +874,38 @@ export function App() {
 
       {message ? <section className="banner">{message}</section> : null}
       {copyNotice ? <section className="banner copy-banner">{copyNotice}</section> : null}
+
+      <section className="panel">
+        <div className="section-head">
+          <div>
+            <h2>Your next three steps</h2>
+            <p className="subtle">This keeps the workflow short: choose one task mode, keep the active set small, then verify the result inside OpenClaw.</p>
+          </div>
+        </div>
+        <div className="dashboard-grid">
+          <div className="prompt-box compact-prompt">
+            <span className="store-label">{guidedJourney.title}</span>
+            <ol className="step-list compact-list">
+              {guidedJourney.steps.map((step) => <li key={step}>{step}</li>)}
+            </ol>
+          </div>
+          {paperFactoryTask ? (
+            <div className="prompt-box compact-prompt spotlight-box">
+              <span className="store-label">Paper Factory spotlight</span>
+              <p>{paperFactoryTask.task.summary}</p>
+              <p className="catalog-meta"><strong>Best first ask:</strong> {paperFactoryTask.task.sampleAsk}</p>
+              <div className="card-actions">
+                <button className="primary" disabled={busy || paperFactoryTask.pack.active} onClick={() => void runManagedPackSwitch(paperFactoryTask.pack.id)}>
+                  {paperFactoryTask.pack.active ? "Paper Factory active" : "Start Paper Factory mode"}
+                </button>
+                <button disabled={busy} onClick={() => void copyText(paperFactoryTask.task.sampleAsk, "Paper Factory sample ask copied")}>
+                  Copy paper ask
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </section>
 
       <section className="panel">
         <div className="section-head">

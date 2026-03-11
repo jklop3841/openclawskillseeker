@@ -400,6 +400,13 @@ button:disabled {
   margin-top: 1rem;
 }
 
+.spotlight-box {
+  border-color: rgba(255, 179, 71, 0.28);
+  background:
+    linear-gradient(180deg, rgba(255, 179, 71, 0.08), rgba(255, 179, 71, 0.02)),
+    rgba(10, 24, 38, 0.72);
+}
+
 .catalog-card h3 {
   margin: 0;
 }
