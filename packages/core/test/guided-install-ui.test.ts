@@ -8,7 +8,7 @@ const root = path.resolve(import.meta.dirname, "../../..");
 test("guided install UI keeps onboarding states and success CTA copy", async () => {
   const appSource = await fs.readFile(path.join(root, "apps", "web", "src", "client", "App.tsx"), "utf8");
 
-  for (const value of ["Choose your current starting point", "ready", "needs attention", "blocked"]) {
+  for (const value of ["Setup and repair", "ready", "needs attention", "blocked"]) {
     assert.equal(appSource.includes(value), true);
   }
 

@@ -883,6 +883,7 @@ export function App() {
       );
     });
   }, [libraryQuery, managedLibrary, showActiveOnly]);
+  const setupNeedsAttention = !setupStatus || setupStatus.status !== "ready";
 
   return (
     <main className="shell">
@@ -1072,41 +1073,71 @@ export function App() {
       ) : null}
 
       <section className="panel">
-        <div className="section-head">
-          <div>
-            <h2>Choose your current starting point</h2>
-            <p className="subtle">Pick the closest path. We will guide the next step from there.</p>
+        <details className="library-details secondary-library-details" open={setupNeedsAttention}>
+          <summary>
+            <div>
+              <strong>Setup and repair</strong>
+              <span className="subtle">
+                {setupNeedsAttention
+                  ? "Your environment still needs attention before the smoothest OpenClaw flow."
+                  : "Everything important looks ready. Open this only if you need to reconnect or repair setup."}
+              </span>
+            </div>
+          </summary>
+          <div className="card-grid">
+            {(["connect-existing", "install-clawhub", "install-openclaw"] as const).map((mode) => (
+              <article className={`catalog-card ${entryMode === mode ? "catalog-card-active" : ""}`} key={mode}>
+                <div className="catalog-topline"><span className="chip chip-accent">{mode === "connect-existing" ? "Connect" : mode === "install-clawhub" ? "Repair" : "Install"}</span></div>
+                <h3>{entryTitle(mode)}</h3>
+                <p>{entryDescription(mode)}</p>
+                <div className="card-actions">
+                  <button className={entryMode === mode ? "primary" : ""} disabled={busy} onClick={() => setEntryMode(mode)}>Choose this path</button>
+                </div>
+              </article>
+            ))}
           </div>
-        </div>
-        <div className="card-grid">
-          {(["connect-existing", "install-clawhub", "install-openclaw"] as const).map((mode) => (
-            <article className={`catalog-card ${entryMode === mode ? "catalog-card-active" : ""}`} key={mode}>
-              <div className="catalog-topline"><span className="chip chip-accent">{mode === "connect-existing" ? "Connect" : mode === "install-clawhub" ? "Repair" : "Install"}</span></div>
-              <h3>{entryTitle(mode)}</h3>
-              <p>{entryDescription(mode)}</p>
-              <div className="card-actions">
-                <button className={entryMode === mode ? "primary" : ""} disabled={busy} onClick={() => setEntryMode(mode)}>Choose this path</button>
-              </div>
+          <div className="grid setup-grid">
+            <article className="panel compact-panel">
+              <h2>Environment status</h2>
+              <div className="stat"><span>Status</span><strong className={setupStatus?.status === "ready" ? "ok" : setupStatus?.status === "blocked" ? "fail" : ""}>{setupStatus?.status ?? "loading"}</strong></div>
+              <div className="stat"><span>clawhub</span><strong className={setupStatus?.hasClawhub ? "ok" : "fail"}>{setupStatus?.hasClawhub ? "detected" : "not detected"}</strong></div>
+              <div className="stat"><span>OpenClaw config</span><strong className={setupStatus?.hasOpenClawConfig ? "ok" : "fail"}>{setupStatus?.hasOpenClawConfig ? "detected" : "not detected"}</strong></div>
+              <div className="stat"><span>Mode</span><strong>{setupStatus?.platformMode ?? "loading"}</strong></div>
             </article>
-          ))}
-        </div>
+
+            <article className="panel compact-panel">
+              <h2>{recommendationTitle(setupStatus)}</h2>
+              <p className="subtle">{recommendationSummary(setupStatus)}</p>
+              <ol className="step-list">{recommendationSteps(setupStatus).map((step) => <li key={step}>{step}</li>)}</ol>
+            </article>
+          </div>
+          <div className="section-head">
+            <div>
+              <h2>Repair guidance</h2>
+              <p className="subtle">If you see blocked or needs attention, fix that first.</p>
+            </div>
+            {setupStatus ? (
+              <div className="tag-row">
+                <a className="button-link" href={setupStatus.docs.openClawInstallUrl} target="_blank" rel="noreferrer">Open OpenClaw docs</a>
+                <a className="button-link" href={setupStatus.docs.clawhubUrl} target="_blank" rel="noreferrer">Open clawhub docs</a>
+                <a className="button-link" href={setupStatus.docs.clawxUrl} target="_blank" rel="noreferrer">Open ClawX page</a>
+              </div>
+            ) : null}
+          </div>
+          <div className="repair-grid">
+            {repairCards.map((card) => (
+              <article className={`repair-card repair-${card.level}`} key={card.title}>
+                <div className="catalog-topline"><span className={`chip ${card.level === "blocked" ? "chip-danger" : "chip-warning"}`}>{card.level === "blocked" ? "blocked" : "needs attention"}</span></div>
+                <h3>{card.title}</h3>
+                <p>{card.body}</p>
+                <ol className="step-list">{card.steps.map((step) => <li key={step}>{step}</li>)}</ol>
+              </article>
+            ))}
+          </div>
+        </details>
       </section>
 
       <section className="grid">
-        <article className="panel">
-          <h2>Environment status</h2>
-          <div className="stat"><span>Status</span><strong className={setupStatus?.status === "ready" ? "ok" : setupStatus?.status === "blocked" ? "fail" : ""}>{setupStatus?.status ?? "loading"}</strong></div>
-          <div className="stat"><span>clawhub</span><strong className={setupStatus?.hasClawhub ? "ok" : "fail"}>{setupStatus?.hasClawhub ? "detected" : "not detected"}</strong></div>
-          <div className="stat"><span>OpenClaw config</span><strong className={setupStatus?.hasOpenClawConfig ? "ok" : "fail"}>{setupStatus?.hasOpenClawConfig ? "detected" : "not detected"}</strong></div>
-          <div className="stat"><span>Mode</span><strong>{setupStatus?.platformMode ?? "loading"}</strong></div>
-        </article>
-
-        <article className="panel">
-          <h2>{recommendationTitle(setupStatus)}</h2>
-          <p className="subtle">{recommendationSummary(setupStatus)}</p>
-          <ol className="step-list">{recommendationSteps(setupStatus).map((step) => <li key={step}>{step}</li>)}</ol>
-        </article>
-
         <article className="panel">
           <h2>Current managed state</h2>
           <div className="mode-status-banner">
@@ -1207,32 +1238,6 @@ export function App() {
             </div>
           ) : null}
         </article>
-      </section>
-
-      <section className="panel">
-        <div className="section-head">
-          <div>
-            <h2>Repair guidance</h2>
-            <p className="subtle">If you see blocked or needs attention, fix that first.</p>
-          </div>
-          {setupStatus ? (
-            <div className="tag-row">
-              <a className="button-link" href={setupStatus.docs.openClawInstallUrl} target="_blank" rel="noreferrer">Open OpenClaw docs</a>
-              <a className="button-link" href={setupStatus.docs.clawhubUrl} target="_blank" rel="noreferrer">Open clawhub docs</a>
-              <a className="button-link" href={setupStatus.docs.clawxUrl} target="_blank" rel="noreferrer">Open ClawX page</a>
-            </div>
-          ) : null}
-        </div>
-        <div className="repair-grid">
-          {repairCards.map((card) => (
-            <article className={`repair-card repair-${card.level}`} key={card.title}>
-              <div className="catalog-topline"><span className={`chip ${card.level === "blocked" ? "chip-danger" : "chip-warning"}`}>{card.level === "blocked" ? "blocked" : "needs attention"}</span></div>
-              <h3>{card.title}</h3>
-              <p>{card.body}</p>
-              <ol className="step-list">{card.steps.map((step) => <li key={step}>{step}</li>)}</ol>
-            </article>
-          ))}
-        </div>
       </section>
 
       <section className="panel">
