@@ -13,7 +13,17 @@ import { ExoskeletonMascot } from "./ExoskeletonMascot.js";
 
 type EntryMode = "connect-existing" | "install-clawhub" | "install-openclaw";
 type ManagedLibrary = {
-  packs: Array<{ id: string; name: string; description: string; skillCount: number; skills: string[]; active: boolean }>;
+  packs: Array<{
+    id: string;
+    name: string;
+    description: string;
+    skillCount: number;
+    skills: string[];
+    category?: string;
+    audience?: string;
+    outcome?: string;
+    active: boolean;
+  }>;
   skills: Array<{
     slug: string;
     name: string;
@@ -30,18 +40,6 @@ type RepairCard = { title: string; body: string; steps: string[]; level: "blocke
 
 const featuredPackIds = ["demo-safe", "knowledge-work", "delivery-engine", "business-ops"] as const;
 const featuredSkillSlugs = ["calendar", "research-first-decider", "product-brief-writer", "doc-systematizer"] as const;
-const packAudience: Record<string, string> = {
-  "demo-safe": "Best for a first install and a fast confidence check.",
-  "knowledge-work": "Founders, operators, researchers, and documentation-heavy teams.",
-  "delivery-engine": "Product, engineering, QA, and shipping-focused teams.",
-  "business-ops": "Support, operations, and cross-functional execution roles."
-};
-const packOutcome: Record<string, string> = {
-  "demo-safe": "Proves the shortest install to attach path with the smallest moving surface.",
-  "knowledge-work": "Turns notes, transcripts, and research into structured outputs.",
-  "delivery-engine": "Supports triage, release readiness, and shipping discipline.",
-  "business-ops": "Improves support replies, runbooks, and coordination clarity."
-};
 
 async function getJson<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, init);
@@ -684,7 +682,12 @@ export function App() {
               <div className="catalog-topline"><span className="chip chip-local">Managed</span><span className="subtle">{pack.skillCount} skills</span><span className={`chip ${pack.active ? "chip-accent" : ""}`}>{pack.active ? "active" : "inactive"}</span></div>
               <h3>{pack.name}</h3>
               <p>{pack.description}</p>
-              <div className="tag-row">{pack.skills.slice(0, 4).map((skill) => <span className="chip" key={skill}>{skill}</span>)}</div>
+              <div className="tag-row">
+                {pack.category ? <span className="chip chip-accent">{pack.category}</span> : null}
+                {pack.skills.slice(0, 4).map((skill) => <span className="chip" key={skill}>{skill}</span>)}
+              </div>
+              {pack.audience ? <p className="catalog-meta"><strong>Best for:</strong> {pack.audience}</p> : null}
+              {pack.outcome ? <p className="catalog-meta"><strong>Outcome:</strong> {pack.outcome}</p> : null}
               <div className="card-actions">
                 <button className="primary" disabled={busy || pack.active} onClick={() => void runManagedPackActivation(pack.id)}>{pack.active ? "Already active" : "Enable in OpenClaw"}</button>
                 {pack.active ? <button disabled={busy} onClick={() => void runManagedPackDeactivation(pack.id)}>Disable pack</button> : null}
@@ -735,11 +738,11 @@ export function App() {
         <div className="card-grid">
           {featuredPacks.map((pack) => (
             <article className="catalog-card" key={pack.id}>
-              <div className="catalog-topline"><span className="chip chip-accent">{pack.id === "demo-safe" ? "Starter" : pack.id}</span><span className="subtle">{pack.skills.length} skills</span></div>
+              <div className="catalog-topline"><span className="chip chip-accent">{pack.category ?? (pack.id === "demo-safe" ? "Starter" : pack.id)}</span><span className="subtle">{pack.skills.length} skills</span></div>
               <h3>{pack.name}</h3>
               <p>{pack.description}</p>
-              <p className="catalog-meta"><strong>Best for:</strong> {packAudience[pack.id] ?? "Users who want to extend OpenClaw quickly."}</p>
-              <p className="catalog-meta"><strong>Outcome:</strong> {packOutcome[pack.id] ?? pack.description}</p>
+              <p className="catalog-meta"><strong>Best for:</strong> {pack.audience ?? "Users who want to extend OpenClaw quickly."}</p>
+              <p className="catalog-meta"><strong>Outcome:</strong> {pack.outcome ?? pack.description}</p>
               <div className="card-actions">
                 {pack.id === "demo-safe"
                   ? <button className="primary" disabled={busy} onClick={() => void runAttach("demo-safe")}>Install and attach</button>

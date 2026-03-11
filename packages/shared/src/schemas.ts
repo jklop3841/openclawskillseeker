@@ -80,6 +80,9 @@ export const CatalogPackSchema = z.object({
   name: z.string().min(1),
   description: z.string().min(1),
   skills: z.array(z.string().min(1)).min(1),
+  category: z.string().optional(),
+  audience: z.string().optional(),
+  outcome: z.string().optional(),
   patchOpenClawConfig: z.boolean().default(false),
   notes: z.array(z.string()).default([])
 });
@@ -327,6 +330,9 @@ export const ManagedLibraryPackSummarySchema = z.object({
   description: z.string(),
   skillCount: z.number().int().nonnegative(),
   skills: z.array(z.string()).default([]),
+  category: z.string().optional(),
+  audience: z.string().optional(),
+  outcome: z.string().optional(),
   active: z.boolean().default(false)
 });
 

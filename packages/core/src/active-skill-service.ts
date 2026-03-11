@@ -43,6 +43,9 @@ export class ActiveSkillService {
         description: pack.description,
         skillCount: pack.skills.length,
         skills: pack.skills,
+        category: pack.category,
+        audience: pack.audience,
+        outcome: pack.outcome,
         active: activePackIds.has(pack.id)
       })),
       skills: localSkills.map((skill) => ({

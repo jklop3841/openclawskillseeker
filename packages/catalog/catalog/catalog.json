@@ -308,6 +308,9 @@
       "name": "Safe Starter Pack",
       "description": "Minimal starter pack with one live, low-friction calendar skill.",
       "skills": ["calendar"],
+      "category": "starter",
+      "audience": "Anyone who wants the shortest possible starter path.",
+      "outcome": "Proves the calendar skill can be installed with the smallest moving surface.",
       "patchOpenClawConfig": true,
       "notes": [
         "Whitelisted starter pack for local testing.",
@@ -319,6 +322,9 @@
       "name": "Demo Safe Pack",
       "description": "Smallest known-good demo pack for default safe-mode installation checks.",
       "skills": ["calendar"],
+      "category": "starter",
+      "audience": "Best for a first install and a fast confidence check.",
+      "outcome": "Proves the shortest install to attach path with the smallest moving surface.",
       "patchOpenClawConfig": true,
       "notes": [
         "Intended for smoke tests and demo recordings.",
@@ -330,6 +336,9 @@
       "name": "Ops Basics Pack",
       "description": "Operational baseline with one safe default install and one gated suspicious helper.",
       "skills": ["agent-self-assessment", "calendar"],
+      "category": "starter",
+      "audience": "Users who want a cautious baseline before expanding further.",
+      "outcome": "Combines a safe live install with one intentionally gated safety helper.",
       "patchOpenClawConfig": true,
       "notes": [
         "Designed for cautious local deployments.",
@@ -342,6 +351,9 @@
       "name": "Agency PoC Pack",
       "description": "Local curated proof of concept pack adapted from agency-agents for implementation, verification, and orchestration workflows.",
       "skills": ["agency-frontend-developer", "agency-reality-checker", "agency-orchestrator"],
+      "category": "delivery",
+      "audience": "Teams validating multi-step implementation and QA orchestration.",
+      "outcome": "Demonstrates how curated workflow skills can coordinate delivery work.",
       "patchOpenClawConfig": true,
       "notes": [
         "Uses local curated skills rather than live registry-only installs.",
@@ -358,6 +370,9 @@
         "doc-systematizer",
         "meeting-note-synthesizer"
       ],
+      "category": "knowledge",
+      "audience": "Founders, operators, researchers, and documentation-heavy teams.",
+      "outcome": "Turns notes, transcripts, and research into structured outputs.",
       "patchOpenClawConfig": true,
       "notes": [
         "Good default pack for founders, operators, and knowledge workers.",
@@ -377,6 +392,9 @@
         "paper-experiment",
         "doc-systematizer"
       ],
+      "category": "research",
+      "audience": "Researchers managing paper drafts, notes, and validation gaps.",
+      "outcome": "Moves messy paper material toward a staged, defensible research workflow.",
       "patchOpenClawConfig": true,
       "notes": [
         "Start with manifest and stage detection before novelty or drafting work.",
@@ -395,6 +413,9 @@
         "release-readiness-checker",
         "repo-triage-coordinator"
       ],
+      "category": "delivery",
+      "audience": "Product, engineering, QA, and shipping-focused teams.",
+      "outcome": "Supports triage, release readiness, and shipping discipline.",
       "patchOpenClawConfig": true,
       "notes": [
         "Built to cover build-ship-fix loops with explicit QA gates.",
@@ -411,6 +432,9 @@
         "repo-triage-coordinator",
         "product-brief-writer"
       ],
+      "category": "operations",
+      "audience": "Support, operations, and cross-functional execution roles.",
+      "outcome": "Improves support replies, runbooks, and coordination clarity.",
       "patchOpenClawConfig": true,
       "notes": [
         "Designed to make a fresh OpenClaw instance feel useful for real business work quickly.",
