@@ -1217,6 +1217,39 @@ export function App() {
             <p>Only the currently active mode is exposed to OpenClaw. You can still browse the full curated library below without dumping it all into the live skill set.</p>
           </div>
         </div>
+        <div className="dashboard-grid">
+          <div className="prompt-box compact-prompt">
+            <span className="store-label">Mode library at a glance</span>
+            <p>Keep OpenClaw focused by switching one pack at a time, then only drop into single-skill tools when you need a narrower override.</p>
+            <div className="store-stats compact">
+              <div>
+                <span className="store-label">Managed packs</span>
+                <strong>{managedLibrary?.packs.length ?? 0}</strong>
+              </div>
+              <div>
+                <span className="store-label">Managed skills</span>
+                <strong>{managedLibrary?.skills.length ?? 0}</strong>
+              </div>
+              <div>
+                <span className="store-label">Active now</span>
+                <strong>{managedLibrary?.activeSkillSlugs.length ?? 0}</strong>
+              </div>
+              <div>
+                <span className="store-label">Direct enables</span>
+                <strong>{managedLibrary?.manualSkillSlugs.length ?? 0}</strong>
+              </div>
+            </div>
+          </div>
+          <div className="prompt-box compact-prompt">
+            <span className="store-label">When to use single-skill tools</span>
+            <p>Stay in pack mode for most work. Only open the single-skill layer if you want one narrow capability without bringing in a whole pack.</p>
+            <ul className="mini-points">
+              <li>Packs are better for full working sessions.</li>
+              <li>Single-skill mode is better for one exact capability.</li>
+              <li>You can always switch back to the previous pack.</li>
+            </ul>
+          </div>
+        </div>
         <div className="library-toolbar">
           <label className="search-field">
             <span className="store-label">Search library</span>
@@ -1265,74 +1298,93 @@ export function App() {
       </section>
 
       <section className="panel">
-        <div className="section-head"><div><h2>Managed local skills</h2><p className="subtle">Use this when you want one skill at a time instead of a full pack.</p></div></div>
-        <div className="filter-strip">
-          {managedTags.map((tag) => (
-            <button
-              key={tag}
-              className={selectedTag === tag ? "primary" : ""}
-              disabled={busy}
-              onClick={() => setSelectedTag(tag)}
-            >
-              {tag}
-            </button>
-          ))}
-        </div>
-        <div className="card-grid">
-          {filteredManagedSkills.map((skill) => (
-            <article className="catalog-card skill-card" key={skill.slug}>
-              <div className="catalog-topline"><span className="chip chip-local">local curated</span><span className="subtle">{activationSourceLabel(skill.activationSource)}</span><span className={`chip ${skill.active ? "chip-accent" : ""}`}>{skill.active ? "active" : "inactive"}</span></div>
-              <h3>{skill.name}</h3>
-              <p>{skill.description}</p>
-              <div className="tag-row">{skill.tags.slice(0, 4).map((tag) => <span className="chip" key={tag}>{tag}</span>)}</div>
-              <div className="card-actions">
-                <button className="primary" disabled={busy} onClick={() => void runManagedSkillSwitch(skill.slug)}>Use this skill only</button>
-                <button disabled={busy || skill.active} onClick={() => void runManagedSkillActivation(skill.slug)}>
-                  {skill.active ? "Already active" : "Add this skill"}
-                </button>
-                {skill.activationSource === "manual" || skill.activationSource === "both"
-                  ? <button disabled={busy} onClick={() => void runManagedSkillDeactivation(skill.slug)}>Remove direct enable</button>
-                  : null}
-              </div>
-            </article>
-          ))}
-          {managedLibrary && filteredManagedSkills.length === 0 ? <p className="subtle">No managed skills match the current filter.</p> : null}
-          {!managedLibrary ? <p className="subtle">Loading managed library...</p> : null}
-        </div>
+        <details className="library-details">
+          <summary>
+            <strong>Single-skill tools</strong>
+            <span className="subtle">Use this when you want one skill at a time instead of a full pack.</span>
+          </summary>
+          <div className="filter-strip">
+            {managedTags.map((tag) => (
+              <button
+                key={tag}
+                className={selectedTag === tag ? "primary" : ""}
+                disabled={busy}
+                onClick={() => setSelectedTag(tag)}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+          <div className="card-grid">
+            {filteredManagedSkills.map((skill) => (
+              <article className="catalog-card skill-card" key={skill.slug}>
+                <div className="catalog-topline"><span className="chip chip-local">local curated</span><span className="subtle">{activationSourceLabel(skill.activationSource)}</span><span className={`chip ${skill.active ? "chip-accent" : ""}`}>{skill.active ? "active" : "inactive"}</span></div>
+                <h3>{skill.name}</h3>
+                <p>{skill.description}</p>
+                <div className="tag-row">{skill.tags.slice(0, 4).map((tag) => <span className="chip" key={tag}>{tag}</span>)}</div>
+                <div className="card-actions">
+                  <button className="primary" disabled={busy} onClick={() => void runManagedSkillSwitch(skill.slug)}>Use this skill only</button>
+                  <button disabled={busy || skill.active} onClick={() => void runManagedSkillActivation(skill.slug)}>
+                    {skill.active ? "Already active" : "Add this skill"}
+                  </button>
+                  {skill.activationSource === "manual" || skill.activationSource === "both"
+                    ? <button disabled={busy} onClick={() => void runManagedSkillDeactivation(skill.slug)}>Remove direct enable</button>
+                    : null}
+                </div>
+              </article>
+            ))}
+            {managedLibrary && filteredManagedSkills.length === 0 ? <p className="subtle">No managed skills match the current filter.</p> : null}
+            {!managedLibrary ? <p className="subtle">Loading managed library...</p> : null}
+          </div>
+        </details>
       </section>
 
       <section className="panel">
-        <div className="section-head"><div><h2>Starter online installs</h2><p className="subtle">Registry-backed starter flows remain available as an advanced option.</p></div></div>
-        <div className="card-grid">
-          {featuredPacks.map((pack) => (
-            <article className="catalog-card" key={pack.id}>
-              <div className="catalog-topline"><span className="chip chip-accent">{pack.category ?? (pack.id === "demo-safe" ? "Starter" : pack.id)}</span><span className="subtle">{pack.skills.length} skills</span></div>
-              <h3>{pack.name}</h3>
-              <p>{pack.description}</p>
-              <p className="catalog-meta"><strong>Best for:</strong> {pack.audience ?? "Users who want to extend OpenClaw quickly."}</p>
-              <p className="catalog-meta"><strong>Outcome:</strong> {pack.outcome ?? pack.description}</p>
-              <div className="card-actions">
-                {pack.id === "demo-safe"
-                  ? <button className="primary" disabled={busy} onClick={() => void runAttach("demo-safe")}>Install and attach</button>
-                  : <button className="primary" disabled={busy} onClick={() => void runPackInstall(pack)}>Install starter pack</button>}
-              </div>
-            </article>
-          ))}
-        </div>
+        <details className="library-details secondary-library-details">
+          <summary>
+            <div>
+              <strong>Starter online installs</strong>
+              <span className="subtle">Registry-backed starter flows remain available as an advanced option.</span>
+            </div>
+          </summary>
+          <div className="card-grid">
+            {featuredPacks.map((pack) => (
+              <article className="catalog-card" key={pack.id}>
+                <div className="catalog-topline"><span className="chip chip-accent">{pack.category ?? (pack.id === "demo-safe" ? "Starter" : pack.id)}</span><span className="subtle">{pack.skills.length} skills</span></div>
+                <h3>{pack.name}</h3>
+                <p>{pack.description}</p>
+                <p className="catalog-meta"><strong>Best for:</strong> {pack.audience ?? "Users who want to extend OpenClaw quickly."}</p>
+                <p className="catalog-meta"><strong>Outcome:</strong> {pack.outcome ?? pack.description}</p>
+                <div className="card-actions">
+                  {pack.id === "demo-safe"
+                    ? <button className="primary" disabled={busy} onClick={() => void runAttach("demo-safe")}>Install and attach</button>
+                    : <button className="primary" disabled={busy} onClick={() => void runPackInstall(pack)}>Install starter pack</button>}
+                </div>
+              </article>
+            ))}
+          </div>
+        </details>
       </section>
 
       <section className="panel">
-        <div className="section-head"><div><h2>Representative catalog skills</h2><p className="subtle">A quick view of what exists in the catalog beyond the default starter path.</p></div></div>
-        <div className="card-grid">
-          {featuredSkills.map((skill) => (
-            <article className="catalog-card skill-card" key={skill.slug}>
-              <div className="catalog-topline"><span className={`chip ${skill.sourceType === "local" ? "chip-local" : ""}`}>{sourceLabel(skill)}</span><span className="subtle">{skill.trustLevel}</span></div>
-              <h3>{skill.name}</h3>
-              <p>{skill.description}</p>
-              <div className="tag-row">{skill.tags.slice(0, 4).map((tag) => <span className="chip" key={tag}>{tag}</span>)}</div>
-            </article>
-          ))}
-        </div>
+        <details className="library-details secondary-library-details">
+          <summary>
+            <div>
+              <strong>Representative catalog skills</strong>
+              <span className="subtle">A quick view of what exists in the catalog beyond the default starter path.</span>
+            </div>
+          </summary>
+          <div className="card-grid">
+            {featuredSkills.map((skill) => (
+              <article className="catalog-card skill-card" key={skill.slug}>
+                <div className="catalog-topline"><span className={`chip ${skill.sourceType === "local" ? "chip-local" : ""}`}>{sourceLabel(skill)}</span><span className="subtle">{skill.trustLevel}</span></div>
+                <h3>{skill.name}</h3>
+                <p>{skill.description}</p>
+                <div className="tag-row">{skill.tags.slice(0, 4).map((tag) => <span className="chip" key={tag}>{tag}</span>)}</div>
+              </article>
+            ))}
+          </div>
+        </details>
       </section>
 
       <section className="panel">

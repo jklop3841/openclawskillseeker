@@ -43,6 +43,9 @@ test("featured shelf UI references curated packs and skills", async () => {
   assert.equal(appSource.includes("Start this task mode"), true);
   assert.equal(appSource.includes("Copy sample ask"), true);
   assert.equal(appSource.includes("Mode library"), true);
+  assert.equal(appSource.includes("Mode library at a glance"), true);
+  assert.equal(appSource.includes("When to use single-skill tools"), true);
+  assert.equal(appSource.includes("Single-skill tools"), true);
   assert.equal(appSource.includes("How the mode library works"), true);
   assert.equal(appSource.includes("Only the currently active mode is exposed to OpenClaw"), true);
   assert.equal(appSource.includes("Test the current active set in OpenClaw"), true);

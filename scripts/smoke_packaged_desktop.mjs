@@ -4,7 +4,7 @@ import path from "node:path";
 
 const exePath = path.resolve("apps", "desktop", "release", "win-unpacked", "OpenClaw-Exoskeleton.exe");
 const healthUrl = "http://127.0.0.1:47221/api/health";
-const timeoutMs = 30000;
+const timeoutMs = 60000;
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -109,7 +109,7 @@ async function main() {
         return;
       } catch (error) {
         lastError = error;
-        await sleep(500);
+        await sleep(750);
       }
     }
 
