@@ -65,7 +65,14 @@ export class ActiveSkillService {
       ,
       activeSkillSlugs: state.activeSkillSlugs,
       activePackIds: state.activePackIds,
-      manualSkillSlugs: state.manualSkillSlugs ?? []
+      manualSkillSlugs: state.manualSkillSlugs ?? [],
+      currentModeTitle: this.describeCurrentMode(state, localPacks),
+      currentModeSummary: this.describeCurrentModeSummary(state, localPacks),
+      recentActions: (state.managedHistory ?? []).slice(0, 5).map((entry) => ({
+        at: entry.at,
+        label: this.describeHistoryEntry(entry, localPacks),
+        activeSkillSlugs: entry.activeSkillSlugs
+      }))
     };
   }
 
@@ -236,7 +243,16 @@ export class ActiveSkillService {
       ...state,
       manualSkillSlugs: input.manualSkillSlugs,
       activeSkillSlugs: selectedSkills.map((skill) => skill.slug),
-      activePackIds: input.selectedPackIds
+      activePackIds: input.selectedPackIds,
+      managedHistory: [
+        {
+          at: new Date().toISOString(),
+          mode: input.mode,
+          targetId: input.targetId,
+          activeSkillSlugs: selectedSkills.map((skill) => skill.slug)
+        },
+        ...(state.managedHistory ?? [])
+      ].slice(0, 12)
     };
 
     let configPatch;
@@ -342,5 +358,57 @@ export class ActiveSkillService {
         ? "Verification passed. Restart OpenClaw to refresh its skill list."
         : "Verification did not pass. Review the advanced details before using these skills."
     ];
+  }
+
+  private describeCurrentMode(state: AppState, localPacks: Array<{ id: string; name: string; skills: string[] }>) {
+    if (state.activePackIds.length === 1 && (state.manualSkillSlugs ?? []).length === 0) {
+      const pack = localPacks.find((entry) => entry.id === state.activePackIds[0]);
+      return pack ? `Current mode: ${pack.name}` : `Current mode: ${state.activePackIds[0]}`;
+    }
+
+    if (state.activePackIds.length === 0 && (state.manualSkillSlugs ?? []).length === 1) {
+      return `Current mode: ${state.manualSkillSlugs[0]}`;
+    }
+
+    if (state.activeSkillSlugs.length === 0) {
+      return "Current mode: none";
+    }
+
+    return "Current mode: custom mix";
+  }
+
+  private describeCurrentModeSummary(state: AppState, localPacks: Array<{ id: string; name: string; skills: string[] }>) {
+    if (state.activePackIds.length === 1 && (state.manualSkillSlugs ?? []).length === 0) {
+      const pack = localPacks.find((entry) => entry.id === state.activePackIds[0]);
+      if (pack) {
+        return `OpenClaw currently reads the ${pack.name} pack with ${pack.skills.length} curated skills.`;
+      }
+    }
+
+    if (state.activePackIds.length === 0 && (state.manualSkillSlugs ?? []).length === 1) {
+      return `OpenClaw currently reads one directly enabled skill: ${state.manualSkillSlugs[0]}.`;
+    }
+
+    if (state.activeSkillSlugs.length === 0) {
+      return "No managed skills are currently active for OpenClaw.";
+    }
+
+    return `OpenClaw currently reads a custom active set of ${state.activeSkillSlugs.length} curated skills.`;
+  }
+
+  private describeHistoryEntry(
+    entry: { mode: ManagedLibraryActivation["mode"]; targetId: string },
+    localPacks: Array<{ id: string; name: string; skills: string[] }>
+  ) {
+    if (entry.mode === "deactivate-all") {
+      return "Cleared all managed skills";
+    }
+
+    if (entry.mode === "switch-pack" || entry.mode === "pack") {
+      const pack = localPacks.find((candidate) => candidate.id === entry.targetId);
+      return `${entry.mode === "switch-pack" ? "Switched to" : "Added"} pack ${pack?.name ?? entry.targetId}`;
+    }
+
+    return `${entry.mode === "switch-skill" ? "Switched to" : "Added"} skill ${entry.targetId}`;
   }
 }

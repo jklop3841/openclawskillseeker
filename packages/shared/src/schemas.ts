@@ -146,7 +146,15 @@ export const AppStateSchema = z.object({
   snapshots: z.array(SnapshotManifestSchema).default([]),
   manualSkillSlugs: z.array(z.string()).default([]),
   activeSkillSlugs: z.array(z.string()).default([]),
-  activePackIds: z.array(z.string()).default([])
+  activePackIds: z.array(z.string()).default([]),
+  managedHistory: z.array(
+    z.object({
+      at: z.string().datetime(),
+      mode: z.enum(["skill", "pack", "switch-skill", "switch-pack", "deactivate-all"]),
+      targetId: z.string(),
+      activeSkillSlugs: z.array(z.string()).default([])
+    })
+  ).default([])
 });
 
 export const ConfigPatchRequestSchema = z.object({
@@ -341,7 +349,16 @@ export const ManagedLibrarySnapshotSchema = z.object({
   skills: z.array(ManagedLibrarySkillSummarySchema).default([]),
   activeSkillSlugs: z.array(z.string()).default([]),
   activePackIds: z.array(z.string()).default([]),
-  manualSkillSlugs: z.array(z.string()).default([])
+  manualSkillSlugs: z.array(z.string()).default([]),
+  currentModeTitle: z.string(),
+  currentModeSummary: z.string(),
+  recentActions: z.array(
+    z.object({
+      at: z.string(),
+      label: z.string(),
+      activeSkillSlugs: z.array(z.string()).default([])
+    })
+  ).default([])
 });
 
 export const InstallPlanSchema = z.object({

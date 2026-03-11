@@ -35,6 +35,13 @@ type ManagedLibrary = {
   activeSkillSlugs: string[];
   activePackIds: string[];
   manualSkillSlugs: string[];
+  currentModeTitle: string;
+  currentModeSummary: string;
+  recentActions: Array<{
+    at: string;
+    label: string;
+    activeSkillSlugs: string[];
+  }>;
 };
 type RepairCard = { title: string; body: string; steps: string[]; level: "blocked" | "warning" };
 
@@ -682,10 +689,25 @@ export function App() {
 
         <article className="panel">
           <h2>Current managed state</h2>
+          <div className="prompt-box">
+            <span className="store-label">{managedLibrary?.currentModeTitle ?? "Current mode: loading"}</span>
+            <p>{managedLibrary?.currentModeSummary ?? "Checking the currently active managed mode."}</p>
+          </div>
           <div className="stat"><span>Active skills</span><strong>{managedLibrary?.activeSkillSlugs.length ? managedLibrary.activeSkillSlugs.join(", ") : "none"}</strong></div>
           <div className="stat"><span>Active packs</span><strong>{managedLibrary?.activePackIds.length ? managedLibrary.activePackIds.join(", ") : "none"}</strong></div>
           <div className="stat"><span>Directly enabled skills</span><strong>{managedLibrary?.manualSkillSlugs.length ? managedLibrary.manualSkillSlugs.join(", ") : "none"}</strong></div>
           <div className="stat"><span>Managed path</span><strong>{managedResult?.activeRoot ?? "Will appear after first managed activation."}</strong></div>
+          {managedLibrary?.recentActions.length ? (
+            <div className="history-box">
+              <span className="store-label">Recent changes</span>
+              {managedLibrary.recentActions.map((entry) => (
+                <p key={`${entry.at}-${entry.label}`}>
+                  {entry.label}
+                  {entry.activeSkillSlugs.length > 0 ? ` -> ${entry.activeSkillSlugs.join(", ")}` : ""}
+                </p>
+              ))}
+            </div>
+          ) : null}
         </article>
       </section>
 

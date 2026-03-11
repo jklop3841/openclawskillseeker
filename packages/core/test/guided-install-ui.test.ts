@@ -23,4 +23,6 @@ test("guided install UI keeps onboarding states and success CTA copy", async () 
   assert.equal(appSource.includes("Keep a large curated library in one place"), true);
   assert.equal(appSource.includes("Use as current mode"), true);
   assert.equal(appSource.includes("Use this skill only"), true);
+  assert.equal(appSource.includes("Recent changes"), true);
+  assert.equal(appSource.includes("Current mode:"), true);
 });

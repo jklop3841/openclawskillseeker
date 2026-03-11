@@ -7,7 +7,8 @@ const emptyState: AppState = {
   snapshots: [],
   manualSkillSlugs: [],
   activeSkillSlugs: [],
-  activePackIds: []
+  activePackIds: [],
+  managedHistory: []
 };
 
 export async function loadState(paths: AppPaths): Promise<AppState> {

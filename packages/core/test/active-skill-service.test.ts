@@ -85,6 +85,8 @@ test("active skill service can activate and deactivate a managed pack while pres
   const knowledgePack = library.packs.find((entry) => entry.id === "knowledge-work");
   assert.equal(bugSkill?.activationSource, "manual");
   assert.equal(knowledgePack?.active, false);
+  assert.equal(library.currentModeTitle.includes("bug-triage-investigator"), true);
+  assert.equal(library.recentActions.length > 0, true);
 });
 
 test("active skill service can switch the current mode to a single managed pack", async () => {
@@ -115,6 +117,10 @@ test("active skill service can switch the current mode to a single managed pack"
   assert.deepEqual(switched.state.manualSkillSlugs, []);
   assert.equal(switched.state.activeSkillSlugs.includes("customer-support-replier"), true);
   assert.equal(switched.state.activeSkillSlugs.includes("bug-triage-investigator"), false);
+  const library = service.listManagedLibrary(switched.state);
+  assert.equal(library.currentModeTitle.includes("Business Ops Pack"), true);
+  assert.equal(library.currentModeSummary.includes("Business Ops Pack"), true);
+  assert.equal(library.recentActions[0]?.label.includes("Switched to pack"), true);
 });
 
 async function fileExists(target: string) {
