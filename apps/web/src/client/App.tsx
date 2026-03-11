@@ -234,6 +234,22 @@ function buildPrompt(managedResult: ManagedLibraryActivation | null, attachResul
   return "";
 }
 
+function buildScenarioPromptCard(currentScenario: { scenario: (typeof workScenarios)[number]; pack: ManagedLibrary["packs"][number] } | null, fallbackPrompt: string) {
+  if (currentScenario) {
+    return {
+      title: `Test ${currentScenario.scenario.title} in OpenClaw`,
+      body: `After restarting OpenClaw, ask it to confirm that ${currentScenario.pack.name} is active and then handle one ${currentScenario.scenario.title.toLowerCase()} task.`,
+      prompt: scenarioPrompt(currentScenario.pack.name, currentScenario.scenario.title)
+    };
+  }
+
+  return {
+    title: "Test the current active set in OpenClaw",
+    body: "After restarting OpenClaw, ask it to list the currently loaded skills and use the best matching active skill for your next task.",
+    prompt: fallbackPrompt || "Please list your currently loaded skills, confirm which active skills are available, and then use the best matching one for my next task."
+  };
+}
+
 function managedActionNoun(mode: ManagedLibraryActivation["mode"]) {
   if (mode === "switch-pack" || mode === "switch-skill") return "switched";
   if (mode === "deactivate-all") return "cleared";
@@ -662,6 +678,7 @@ export function App() {
   );
   const repairCards = buildRepairCards(setupStatus);
   const prompt = buildPrompt(managedResult, attachResult);
+  const promptCard = buildScenarioPromptCard(currentScenario, prompt);
   const managedTags = useMemo(() => {
     const tags = new Set<string>();
     for (const skill of managedLibrary?.skills ?? []) {
@@ -943,6 +960,16 @@ export function App() {
               Copy OpenClaw test prompt
             </button>
           </div>
+          <div className="prompt-box">
+            <span className="store-label">{promptCard.title}</span>
+            <p>{promptCard.body}</p>
+            <code className="inline-prompt">{promptCard.prompt}</code>
+          </div>
+          <ol className="step-list compact-list">
+            <li>Switch one scenario or mode.</li>
+            <li>Restart OpenClaw so it reloads the current active set.</li>
+            <li>Paste the prompt above into OpenClaw and confirm it uses the active skill set.</li>
+          </ol>
           {managedLibrary?.recentActions.length ? (
             <div className="history-box">
               <span className="store-label">Recent changes</span>

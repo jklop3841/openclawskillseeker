@@ -557,6 +557,23 @@ button:disabled {
   margin: 0.35rem 0 0;
 }
 
+.inline-prompt {
+  display: block;
+  margin-top: 0.85rem;
+  padding: 0.85rem 1rem;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff1d6;
+  font-family: "Cascadia Code", "Consolas", monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.compact-list {
+  margin-top: 1rem;
+}
+
 .history-entry {
   display: flex;
   align-items: center;
