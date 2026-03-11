@@ -483,6 +483,16 @@ button:disabled {
   margin: 0.55rem 0;
 }
 
+.step-list {
+  margin: 0.5rem 0 0;
+  padding-left: 1.2rem;
+  color: var(--muted);
+}
+
+.step-list li + li {
+  margin-top: 0.45rem;
+}
+
 .prompt-box {
   margin-top: 1rem;
   padding: 0.9rem 1rem;

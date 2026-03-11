@@ -20,4 +20,5 @@ test("guided install UI keeps onboarding states and success CTA copy", async () 
   assert.equal(appSource.includes("我已经装了 OpenClaw / ClawX"), true);
   assert.equal(appSource.includes("我已经有 OpenClaw，但缺少技能安装器"), true);
   assert.equal(appSource.includes("我还没有 OpenClaw / ClawX"), true);
+  assert.equal(appSource.includes("先判断你现在缺什么，再带你走对的下一步。"), true);
 });

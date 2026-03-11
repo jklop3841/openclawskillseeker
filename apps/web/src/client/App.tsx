@@ -57,6 +57,13 @@ const packTier: Record<string, string> = {
 
 type EntryMode = "connect-existing" | "install-clawhub" | "install-openclaw";
 
+type RepairCard = {
+  title: string;
+  body: string;
+  steps: string[];
+  level: "blocked" | "warning";
+};
+
 function sourceLabel(skill: CatalogSkill) {
   if (skill.sourceType === "local") {
     return "local curated";
@@ -159,21 +166,84 @@ function recommendationSummary(status: SetupStatus | null) {
     return "正在检测当前环境，请稍等。";
   }
 
-  return status.summary;
+  switch (status.recommendation) {
+    case "install-openclaw":
+      return "还没有检测到 OpenClaw / ClawX 底座，先安装底座再继续。";
+    case "install-clawhub":
+      return "已经检测到 OpenClaw，但缺少 clawhub，先修复技能安装器。";
+    case "check-wsl-path":
+      return "这台机器同时具备 Windows 和 WSL 环境，先确认 OpenClaw 跑在哪一边。";
+    default:
+      return "已检测到可用环境，现在可以直接安装并接入精选技能。";
+  }
 }
 
-function buildRepairCards(status: SetupStatus | null) {
+function recommendationTitle(status: SetupStatus | null) {
+  if (!status) {
+    return "正在准备环境建议";
+  }
+
+  switch (status.recommendation) {
+    case "install-openclaw":
+      return "先安装 OpenClaw / ClawX";
+    case "install-clawhub":
+      return "先修复技能安装器";
+    case "check-wsl-path":
+      return "确认你的底座运行位置";
+    default:
+      return "直接连接现有 OpenClaw";
+  }
+}
+
+function recommendationSteps(status: SetupStatus | null) {
+  if (!status) {
+    return ["正在准备环境建议。"];
+  }
+
+  switch (status.recommendation) {
+    case "install-openclaw":
+      return [
+        "如果你想用图形界面，可以先安装 ClawX。",
+        "如果你想用官方底座，请按 OpenClaw 官方安装文档完成安装。",
+        "安装或启动一次后，回到这里重新检测。"
+      ];
+    case "install-clawhub":
+      return [
+        "先安装官方 clawhub CLI。",
+        "安装完成后点击 Retry environment check。",
+        "然后再执行一键接入。"
+      ];
+    case "check-wsl-path":
+      return [
+        "如果 OpenClaw 跑在 Windows，就继续当前模式即可。",
+        "如果 OpenClaw 跑在 WSL，请优先使用 WSL 路径模式。",
+        "确认后再开始一键接入。"
+      ];
+    default:
+      return [
+        "点击 Install and attach Calendar。",
+        "完成后重启 OpenClaw。",
+        "回到 OpenClaw 里测试 calendar skill。"
+      ];
+  }
+}
+
+function buildRepairCards(status: SetupStatus | null): RepairCard[] {
   if (!status) {
     return [];
   }
 
-  const cards: Array<{ title: string; body: string; action: string; level: "blocked" | "warning" }> = [];
+  const cards: RepairCard[] = [];
 
   if (!status.hasOpenClawConfig) {
     cards.push({
       title: "先安装或启动 OpenClaw / ClawX",
       body: "系统还没有检测到可用的 OpenClaw 配置文件，所以暂时无法自动接入。",
-      action: "先按官方路径安装 OpenClaw，或者启动一次 ClawX / OpenClaw 生成配置，再回来继续。",
+      steps: [
+        "先按官方路径安装 OpenClaw，或者先启动一次 ClawX / OpenClaw 生成配置。",
+        "回到这里点击 Retry environment check。",
+        "状态变成 ready 或 needs attention 后，再开始一键接入。"
+      ],
       level: "blocked"
     });
   }
@@ -182,16 +252,24 @@ function buildRepairCards(status: SetupStatus | null) {
     cards.push({
       title: "先安装 clawhub",
       body: "没有 clawhub，系统就不能真正下载和安装技能。",
-      action: "先安装官方 clawhub CLI，完成后点击 Retry environment check。",
+      steps: [
+        "先打开官方 clawhub 文档或安装页。",
+        "完成安装后，回到本应用点击 Retry environment check。",
+        "检测通过后，再执行 Install and attach Calendar。"
+      ],
       level: "blocked"
     });
   }
 
   if (status.platformMode === "windows" && status.recommendation === "check-wsl-path") {
     cards.push({
-      title: "确认你的 OpenClaw 运行位置",
-      body: "这台机器同时具备 Windows 和 WSL 环境，路径格式会影响技能接入位置。",
-      action: "如果 OpenClaw 跑在 Windows，就继续当前模式；如果跑在 WSL，后续请按 WSL 路径模式接入。",
+      title: "确认你的底座运行位置",
+      body: "这台机器同时具备 Windows 和 WSL 环境。先确认 OpenClaw 跑在哪一边，再继续接入。",
+      steps: [
+        "如果 OpenClaw 跑在 Windows，就继续当前模式。",
+        "如果 OpenClaw 跑在 WSL，后续请优先使用 WSL 路径模式。",
+        "确认后再开始一键接入，避免路径挂错。"
+      ],
       level: "warning"
     });
   }
@@ -200,7 +278,11 @@ function buildRepairCards(status: SetupStatus | null) {
     cards.push({
       title: "环境已就绪",
       body: "现在可以直接开始一键接入，无需自己处理 paths、extraDirs 或 SKILL.md。",
-      action: "点击 Install and attach Calendar，完成后重启 OpenClaw。",
+      steps: [
+        "点击 Install and attach Calendar。",
+        "等待 detect、install、attach、verify 四个阶段完成。",
+        "完成后按提示重启 OpenClaw。"
+      ],
       level: "warning"
     });
   }
@@ -275,7 +357,7 @@ export function App() {
     setBusy(true);
     setMessage("");
     setAttachResult(null);
-    setActionLabel(`安装能力包 ${pack.name}`);
+    setActionLabel(`安装能力包：${pack.name}`);
 
     try {
       const result = await getJson<{
@@ -359,7 +441,6 @@ export function App() {
     [catalog]
   );
 
-  const installedSummary = state?.installedPacks ?? [];
   const successPrompt = resultPrompt(Boolean(attachResult?.success));
   const repairCards = buildRepairCards(setupStatus);
 
@@ -394,9 +475,17 @@ export function App() {
 
         <div className="hero-action-card">
           <h2>当前建议</h2>
-          <p>{recommendationSummary(setupStatus)}</p>
+              <p>{recommendationSummary(setupStatus)}</p>
           <div className="tag-row">
-            <span className={`chip ${recommendationBadge(setupStatus) === "blocked" ? "chip-danger" : recommendationBadge(setupStatus) === "needs attention" ? "chip-warning" : "chip-accent"}`}>
+            <span
+              className={`chip ${
+                recommendationBadge(setupStatus) === "blocked"
+                  ? "chip-danger"
+                  : recommendationBadge(setupStatus) === "needs attention"
+                    ? "chip-warning"
+                    : "chip-accent"
+              }`}
+            >
               {recommendationBadge(setupStatus)}
             </span>
             {setupStatus ? <span className="chip">{setupStatus.recommendation}</span> : null}
@@ -411,6 +500,7 @@ export function App() {
             Undo last attach
           </button>
           <p className="subtle small">主推荐入口仍然是 Calendar。先把这条黄金路径跑通，再扩更多能力包。</p>
+          <p className="subtle small">当前动作：{actionLabel}</p>
         </div>
       </section>
 
@@ -420,14 +510,16 @@ export function App() {
         <div className="section-head">
           <div>
             <h2>先选你当前的情况</h2>
-            <p className="subtle">这一步只负责分流，不要求你先理解概念。</p>
+            <p className="subtle">这一步只负责分流，不要求你先理解技术概念。</p>
           </div>
         </div>
         <div className="card-grid">
           {(["connect-existing", "install-clawhub", "install-openclaw"] as const).map((mode) => (
             <article className={`catalog-card ${entryMode === mode ? "catalog-card-active" : ""}`} key={mode}>
               <div className="catalog-topline">
-                <span className="chip chip-accent">{mode === "connect-existing" ? "Connect" : mode === "install-clawhub" ? "Repair" : "Install"}</span>
+                <span className="chip chip-accent">
+                  {mode === "connect-existing" ? "Connect" : mode === "install-clawhub" ? "Repair" : "Install"}
+                </span>
               </div>
               <h3>{entryTitle(mode)}</h3>
               <p>{entryDescription(mode)}</p>
@@ -474,13 +566,15 @@ export function App() {
           <h2>系统建议</h2>
           {setupStatus ? (
             <>
-              <p><strong>{setupStatus.title}</strong></p>
-              <p className="subtle">{setupStatus.summary}</p>
-              <div className="summary-list">
-                {setupStatus.nextSteps.map((step) => (
-                  <p key={step}>{step}</p>
+              <p>
+                <strong>{recommendationTitle(setupStatus)}</strong>
+              </p>
+              <p className="subtle">{recommendationSummary(setupStatus)}</p>
+              <ol className="step-list">
+                {recommendationSteps(setupStatus).map((step) => (
+                  <li key={step}>{step}</li>
                 ))}
-              </div>
+              </ol>
             </>
           ) : (
             <p className="subtle">正在获取环境建议。</p>
@@ -525,7 +619,11 @@ export function App() {
               </div>
               <h3>{card.title}</h3>
               <p>{card.body}</p>
-              <p className="catalog-meta"><strong>下一步：</strong>{card.action}</p>
+              <ol className="step-list">
+                {card.steps.map((step) => (
+                  <li key={step}>{step}</li>
+                ))}
+              </ol>
             </article>
           ))}
         </div>
@@ -556,7 +654,7 @@ export function App() {
               <span className="chip chip-accent">Official</span>
             </div>
             <h3>修复 clawhub</h3>
-            <p>如果你已经有 OpenClaw，但缺少技能安装器，先把官方 clawhub 安装好，再回来继续。</p>
+            <p>如果你已经有 OpenClaw，但缺少技能安装器，先把官方 clawhub 安装好，再回到这里继续。</p>
             <div className="card-actions">
               <a className="button-link" href={setupStatus?.docs.clawhubUrl ?? "https://docs.openclaw.ai/tools/clawhub"} target="_blank" rel="noreferrer">
                 打开 clawhub 文档
@@ -594,8 +692,14 @@ export function App() {
               </div>
               <h3>{pack.name}</h3>
               <p>{pack.description}</p>
-              <p className="catalog-meta"><strong>适合谁：</strong>{packAudience[pack.id] ?? "需要快速增强 OpenClaw 的用户"}</p>
-              <p className="catalog-meta"><strong>能帮你做什么：</strong>{packOutcome[pack.id] ?? pack.description}</p>
+              <p className="catalog-meta">
+                <strong>适合谁：</strong>
+                {packAudience[pack.id] ?? "需要快速增强 OpenClaw 的用户"}
+              </p>
+              <p className="catalog-meta">
+                <strong>能帮你做什么：</strong>
+                {packOutcome[pack.id] ?? pack.description}
+              </p>
               <div className="store-stats">
                 <div>
                   <span className="store-label">评级</span>
@@ -707,7 +811,11 @@ export function App() {
           <h2>失败时怎么处理</h2>
           {failureTitle || failureBody ? (
             <>
-              {failureTitle ? <p><strong>{failureTitle}</strong></p> : null}
+              {failureTitle ? (
+                <p>
+                  <strong>{failureTitle}</strong>
+                </p>
+              ) : null}
               {failureBody ? <p>{failureBody}</p> : null}
             </>
           ) : (
