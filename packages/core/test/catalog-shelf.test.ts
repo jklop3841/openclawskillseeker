@@ -25,7 +25,6 @@ test("featured shelf UI references curated packs and skills", async () => {
   assert.equal(appSource.includes("enabled by pack"), true);
   assert.equal(appSource.includes("Search library"), true);
   assert.equal(appSource.includes("Show active only"), true);
-  assert.equal(appSource.includes("Quick mode presets"), true);
   assert.equal(appSource.includes("Start from the task you need right now"), true);
   assert.equal(appSource.includes("Do this next"), true);
   assert.equal(appSource.includes("One focused mode, one restart, one prompt."), true);
@@ -43,10 +42,8 @@ test("featured shelf UI references curated packs and skills", async () => {
   assert.equal(appSource.includes("Handle support or operations"), true);
   assert.equal(appSource.includes("Start this task mode"), true);
   assert.equal(appSource.includes("Copy sample ask"), true);
-  assert.equal(appSource.includes("Switch to this mode"), true);
-  assert.equal(appSource.includes("Copy test prompt"), true);
-  assert.equal(appSource.includes("Work scenarios"), true);
-  assert.equal(appSource.includes("Choose what you want OpenClaw to do next"), true);
+  assert.equal(appSource.includes("Mode library"), true);
+  assert.equal(appSource.includes("How the mode library works"), true);
   assert.equal(appSource.includes("Only the currently active mode is exposed to OpenClaw"), true);
   assert.equal(appSource.includes("Test the current active set in OpenClaw"), true);
   assert.equal(appSource.includes("Restart OpenClaw so it reloads the current active set"), true);
@@ -56,7 +53,5 @@ test("featured shelf UI references curated packs and skills", async () => {
   assert.equal(appSource.includes("Build and ship"), true);
   assert.equal(appSource.includes("Support and operations"), true);
   assert.equal(appSource.includes("Paper Factory"), true);
-  assert.equal(appSource.includes("Use this scenario"), true);
-  assert.equal(appSource.includes("Copy scenario prompt"), true);
-  assert.equal(appSource.includes("Switch to this scenario"), true);
+  assert.equal(appSource.includes("Current scenario"), true);
 });

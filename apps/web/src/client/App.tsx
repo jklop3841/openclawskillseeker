@@ -1040,128 +1040,6 @@ export function App() {
       <section className="panel">
         <div className="section-head">
           <div>
-            <h2>Choose what you want OpenClaw to do next</h2>
-            <p className="subtle">
-              Pick one scenario, keep only that active set in front of OpenClaw, then restart OpenClaw and test with one clear prompt.
-            </p>
-          </div>
-        </div>
-        <div className="scenario-lead">
-          <div className="prompt-box">
-            <span className="store-label">Current scenario</span>
-            <p>
-              {currentScenario
-                ? `${currentScenario.scenario.title} is active through ${currentScenario.pack.name}.`
-                : "No scenario is active yet. Choose one scenario below to keep OpenClaw focused."}
-            </p>
-          </div>
-          <div className="prompt-box">
-            <span className="store-label">How this works</span>
-            <p>Only the currently active mode is exposed to OpenClaw. You can switch modes at any time without dumping the whole library into the live skill set.</p>
-          </div>
-        </div>
-        <div className="card-grid">
-          {scenarioPacks.map(({ scenario, pack }) => (
-            <article className={`catalog-card scenario-card ${pack.active ? "catalog-card-active" : ""}`} key={`entry-scenario-${pack.id}`}>
-              <div className="catalog-topline">
-                <span className="chip chip-accent">{scenario.title}</span>
-                <span className={`chip ${pack.active ? "chip-accent" : ""}`}>{pack.active ? "active now" : "switch-ready"}</span>
-              </div>
-              <h3>{scenario.title}</h3>
-              <p>{scenario.summary}</p>
-              <p className="catalog-meta"><strong>Uses mode:</strong> {pack.name}</p>
-              <p className="catalog-meta"><strong>Best for:</strong> {scenario.audience}</p>
-              <p className="catalog-meta"><strong>Delivers:</strong> {scenario.deliverable}</p>
-              <div className="tag-row">
-                {pack.skills.slice(0, 4).map((skill) => <span className="chip" key={`entry-scenario-skill-${pack.id}-${skill}`}>{skill}</span>)}
-              </div>
-              <div className="card-actions">
-                <button className="primary" disabled={busy || pack.active} onClick={() => void runManagedPackSwitch(pack.id)}>
-                  {pack.active ? "Current scenario" : "Switch to this scenario"}
-                </button>
-                <button disabled={busy} onClick={() => void copyText(scenarioPrompt(pack.name, scenario.title), `${scenario.title} prompt copied`)}>
-                  Copy scenario prompt
-                </button>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="panel">
-        <div className="section-head">
-          <div>
-            <h2>Quick mode presets</h2>
-            <p className="subtle">Switch OpenClaw to one clear working mode instead of loading too many skills at once.</p>
-          </div>
-        </div>
-        <div className="card-grid">
-          {featuredManagedPacks.map((pack) => (
-            <article className={`catalog-card ${pack.active ? "catalog-card-active" : ""}`} key={`preset-${pack.id}`}>
-              <div className="catalog-topline">
-                <span className="chip chip-local">{pack.category ?? "managed"}</span>
-                <span className={`chip ${pack.active ? "chip-accent" : ""}`}>{pack.active ? "current mode" : "available"}</span>
-              </div>
-              <h3>{pack.name}</h3>
-              <p>{pack.description}</p>
-              {pack.audience ? <p className="catalog-meta"><strong>Best for:</strong> {pack.audience}</p> : null}
-              {pack.outcome ? <p className="catalog-meta"><strong>Delivers:</strong> {pack.outcome}</p> : null}
-              <div className="tag-row">
-                {pack.skills.slice(0, 4).map((skill) => <span className="chip" key={`preset-skill-${pack.id}-${skill}`}>{skill}</span>)}
-              </div>
-              <div className="card-actions">
-                <button className="primary" disabled={busy || pack.active} onClick={() => void runManagedPackSwitch(pack.id)}>
-                  {pack.active ? "Current mode" : "Switch to this mode"}
-                </button>
-                <button disabled={busy} onClick={() => void copyText(`Please list your currently loaded skills, confirm whether the ${pack.name} pack is active, and then use the best matching active skill for my next task.`, `${pack.name} test prompt copied`)}>
-                  Copy test prompt
-                </button>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="panel">
-        <div className="section-head">
-          <div>
-            <h2>Work scenarios</h2>
-            <p className="subtle">Choose the kind of work you want OpenClaw to do next, then switch to the matching curated mode.</p>
-          </div>
-        </div>
-        <div className="card-grid">
-          {scenarioPacks.map(({ scenario, pack }) => (
-            <article className={`catalog-card ${pack.active ? "catalog-card-active" : ""}`} key={`scenario-${pack.id}`}>
-              <div className="catalog-topline">
-                <span className="chip chip-accent">{scenario.title}</span>
-                <span className={`chip ${pack.active ? "chip-accent" : ""}`}>{pack.active ? "active now" : "ready to use"}</span>
-              </div>
-              <h3>{pack.name}</h3>
-              <p>{scenario.summary}</p>
-              <p className="catalog-meta"><strong>Best for:</strong> {scenario.audience}</p>
-              <p className="catalog-meta"><strong>Delivers:</strong> {scenario.deliverable}</p>
-              <div className="tag-row">
-                {pack.skills.slice(0, 5).map((skill) => <span className="chip" key={`scenario-skill-${pack.id}-${skill}`}>{skill}</span>)}
-              </div>
-              <div className="card-actions">
-                <button className="primary" disabled={busy || pack.active} onClick={() => void runManagedPackSwitch(pack.id)}>
-                  {pack.active ? "Current scenario" : "Use this scenario"}
-                </button>
-                <button
-                  disabled={busy}
-                  onClick={() => void copyText(scenarioPrompt(pack.name, scenario.title), `${scenario.title} prompt copied`)}
-                >
-                  Copy scenario prompt
-                </button>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      <section className="panel">
-        <div className="section-head">
-          <div>
             <h2>Choose your current starting point</h2>
             <p className="subtle">Pick the closest path. We will guide the next step from there.</p>
           </div>
@@ -1324,7 +1202,21 @@ export function App() {
       </section>
 
       <section className="panel">
-        <div className="section-head"><div><h2>Managed local packs</h2><p className="subtle">Recommended path. Enable only the packs OpenClaw should see right now.</p></div></div>
+        <div className="section-head"><div><h2>Mode library</h2><p className="subtle">Recommended path. Enable only the packs OpenClaw should see right now.</p></div></div>
+        <div className="scenario-lead">
+          <div className="prompt-box">
+            <span className="store-label">Current scenario</span>
+            <p>
+              {currentScenario
+                ? `${currentScenario.scenario.title} is active through ${currentScenario.pack.name}.`
+                : "No scenario is active yet. Choose one task mode above to keep OpenClaw focused."}
+            </p>
+          </div>
+          <div className="prompt-box">
+            <span className="store-label">How the mode library works</span>
+            <p>Only the currently active mode is exposed to OpenClaw. You can still browse the full curated library below without dumping it all into the live skill set.</p>
+          </div>
+        </div>
         <div className="library-toolbar">
           <label className="search-field">
             <span className="store-label">Search library</span>
