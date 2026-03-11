@@ -7,6 +7,7 @@ export interface AppPaths {
   reportsDir: string;
   snapshotsDir: string;
   statePath: string;
+  activeSkillsRoot: string;
   openClawDir: string;
   openClawConfigPath: string;
   openClawWorkspacePath: string;
@@ -43,6 +44,7 @@ export function getAppPaths(baseHome = os.homedir()): AppPaths {
     reportsDir: path.join(sidecarHome, "reports"),
     snapshotsDir: path.join(sidecarHome, "snapshots"),
     statePath: path.join(sidecarHome, "state.json"),
+    activeSkillsRoot: path.join(sidecarHome, "active-skills"),
     openClawDir,
     openClawConfigPath: path.join(openClawDir, "openclaw.json"),
     openClawWorkspacePath: path.join(openClawDir, "workspace"),

@@ -140,7 +140,9 @@ export const InstalledPackSchema = z.object({
 
 export const AppStateSchema = z.object({
   installedPacks: z.array(InstalledPackSchema).default([]),
-  snapshots: z.array(SnapshotManifestSchema).default([])
+  snapshots: z.array(SnapshotManifestSchema).default([]),
+  activeSkillSlugs: z.array(z.string()).default([]),
+  activePackIds: z.array(z.string()).default([])
 });
 
 export const ConfigPatchRequestSchema = z.object({
@@ -294,6 +296,19 @@ export const SetupStatusSchema = z.object({
     clawhubUrl: z.string().url(),
     clawxUrl: z.string().url()
   })
+});
+
+export const ManagedLibraryActivationSchema = z.object({
+  mode: z.enum(["skill", "pack", "deactivate-all"]),
+  targetId: z.string(),
+  activeSkillSlugs: z.array(z.string()).default([]),
+  activePackIds: z.array(z.string()).default([]),
+  activeRoot: z.string(),
+  success: z.boolean(),
+  configPatch: ConfigPatchResultSchema.optional(),
+  verify: VerifyPackLayoutSchema,
+  userSummary: z.array(z.string()).default([]),
+  nextStep: z.string()
 });
 
 export const InstallPlanSchema = z.object({
@@ -476,6 +491,7 @@ export type VerifyPackLayout = z.infer<typeof VerifyPackLayoutSchema>;
 export type AttachFlowResult = z.infer<typeof AttachFlowResultSchema>;
 export type SetupRecommendation = z.infer<typeof SetupRecommendationSchema>;
 export type SetupStatus = z.infer<typeof SetupStatusSchema>;
+export type ManagedLibraryActivation = z.infer<typeof ManagedLibraryActivationSchema>;
 export type ReportRecord = z.infer<typeof ReportRecordSchema>;
 export type RollbackVerify = z.infer<typeof RollbackVerifySchema>;
 export type PaperEvidenceNote = z.infer<typeof PaperEvidenceNoteSchema>;

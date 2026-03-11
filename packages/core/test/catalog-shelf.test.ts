@@ -12,7 +12,7 @@ test("featured shelf UI references curated packs and skills", async () => {
     assert.equal(appSource.includes(value), true);
   }
 
-  for (const value of ["calendar", "research-first-decider", "ops-runbook-copilot"]) {
+  for (const value of ["calendar", "research-first-decider", "product-brief-writer", "doc-systematizer"]) {
     assert.equal(appSource.includes(value), true);
   }
 

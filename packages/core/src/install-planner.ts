@@ -13,17 +13,19 @@ export function buildInstallPlan(input: {
   const skills = input.pack.skills.map((slug) => {
     const skill = skillMap.get(slug);
     if (!skill) {
-      return { slug, allowed: false, reason: "Not found in local curated catalog." };
+      return { slug, allowed: false, reason: "Not found in local curated catalog.", sourceType: "registry" as const };
     }
 
     if (!skill.curated) {
-      return { slug, allowed: false, reason: "Third-party skill is not whitelisted." };
+      return { slug, allowed: false, reason: "Third-party skill is not whitelisted.", sourceType: skill.sourceType };
     }
 
     return {
       slug,
       allowed: true,
-      reason: `${skill.trustLevel} catalog entry`
+      reason: `${skill.trustLevel} catalog entry`,
+      sourceType: skill.sourceType,
+      sourcePath: skill.sourceRef?.path
     };
   });
 

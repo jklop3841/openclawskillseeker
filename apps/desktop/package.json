@@ -34,6 +34,14 @@
         "to": "web-dist"
       },
       {
+        "from": "../../skills",
+        "to": "curated/skills"
+      },
+      {
+        "from": "../../docs/agency-agents-skill-drafts",
+        "to": "curated/docs/agency-agents-skill-drafts"
+      },
+      {
         "from": "assets",
         "to": "assets"
       }

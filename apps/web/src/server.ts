@@ -7,6 +7,7 @@ import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import type { Server } from "node:http";
 import {
+  ActiveSkillService,
   AttachService,
   CatalogService,
   ConfigService,
@@ -151,6 +152,7 @@ export function createWebApp() {
     clawhubBin: detectDefaultClawhubBin()
   });
   const attach = new AttachService(paths, doctor, packs, config);
+  const activeSkills = new ActiveSkillService(paths, config, packs);
 
   app.use(express.json());
 
@@ -179,6 +181,10 @@ export function createWebApp() {
     res.json(catalog.listCatalog());
   });
 
+  app.get("/api/library", (_req, res) => {
+    res.json(activeSkills.listManagedLibrary());
+  });
+
   app.get("/api/state", async (_req, res) => {
     res.json(await loadState(paths));
   });
@@ -197,6 +203,36 @@ export function createWebApp() {
     try {
       const state = await loadState(paths);
       const result = await attach.attachDemoSafe(state);
+      res.json(result.result);
+    } catch (error) {
+      res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.post("/api/library/skills/:slug/activate", async (req, res) => {
+    try {
+      const state = await loadState(paths);
+      const result = await activeSkills.activateSkill(req.params.slug, state);
+      res.json(result.result);
+    } catch (error) {
+      res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.post("/api/library/packs/:packId/activate", async (req, res) => {
+    try {
+      const state = await loadState(paths);
+      const result = await activeSkills.activatePack(req.params.packId, state);
+      res.json(result.result);
+    } catch (error) {
+      res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.post("/api/library/deactivate-all", async (_req, res) => {
+    try {
+      const state = await loadState(paths);
+      const result = await activeSkills.deactivateAll(state);
       res.json(result.result);
     } catch (error) {
       res.status(400).json({ error: error instanceof Error ? error.message : String(error) });

@@ -161,6 +161,96 @@
       }
     },
     {
+      "slug": "paper-scan",
+      "name": "Paper Scan",
+      "description": "Local curated skill for scanning a paper workspace into manifest records, topic clusters, and stage guesses before higher-order analysis.",
+      "homepage": "https://github.com/jklop3841/openclawskillseeker",
+      "tags": ["research", "paper", "manifest", "classification"],
+      "trustLevel": "curated",
+      "curated": true,
+      "free": true,
+      "notes": "First-entry workflow for stage-aware paper operations.",
+      "sourceType": "local",
+      "sourceRef": {
+        "path": "skills/paper-scan"
+      }
+    },
+    {
+      "slug": "paper-novelty",
+      "name": "Paper Novelty",
+      "description": "Local curated skill for originality review, nearest-neighbor risk, and conservative publishability judgment on research drafts and ideas.",
+      "homepage": "https://github.com/jklop3841/openclawskillseeker",
+      "tags": ["research", "paper", "novelty", "publication"],
+      "trustLevel": "curated",
+      "curated": true,
+      "free": true,
+      "notes": "Use before polishing to judge whether the idea is actually worth writing up.",
+      "sourceType": "local",
+      "sourceRef": {
+        "path": "skills/paper-novelty"
+      }
+    },
+    {
+      "slug": "paper-scaffold",
+      "name": "Paper Scaffold",
+      "description": "Local curated skill for converting messy research materials into a minimum complete paper scaffold with explicit support labels.",
+      "homepage": "https://github.com/jklop3841/openclawskillseeker",
+      "tags": ["research", "paper", "scaffold", "structure"],
+      "trustLevel": "curated",
+      "curated": true,
+      "free": true,
+      "notes": "Implements left-adjoint completion for fragmented paper materials.",
+      "sourceType": "local",
+      "sourceRef": {
+        "path": "skills/paper-scaffold"
+      }
+    },
+    {
+      "slug": "paper-evidence",
+      "name": "Paper Evidence",
+      "description": "Local curated skill for inferring the minimum evidence, experiments, and scope constraints required to defend paper claims.",
+      "homepage": "https://github.com/jklop3841/openclawskillseeker",
+      "tags": ["research", "paper", "evidence", "validation"],
+      "trustLevel": "curated",
+      "curated": true,
+      "free": true,
+      "notes": "Implements right-adjoint validation for paper claims and contribution statements.",
+      "sourceType": "local",
+      "sourceRef": {
+        "path": "skills/paper-evidence"
+      }
+    },
+    {
+      "slug": "paper-orchestrator",
+      "name": "Paper Orchestrator",
+      "description": "Local curated skill for running the minimum stage-aware paper pipeline and producing a consolidated report.",
+      "homepage": "https://github.com/jklop3841/openclawskillseeker",
+      "tags": ["research", "paper", "workflow", "orchestration"],
+      "trustLevel": "curated",
+      "curated": true,
+      "free": true,
+      "notes": "Coordinates scan, scaffold, and evidence steps into one reproducible run.",
+      "sourceType": "local",
+      "sourceRef": {
+        "path": "skills/paper-orchestrator"
+      }
+    },
+    {
+      "slug": "paper-experiment",
+      "name": "Paper Experiment",
+      "description": "Local curated skill for converting claims and evidence gaps into a minimum publishable experiment matrix.",
+      "homepage": "https://github.com/jklop3841/openclawskillseeker",
+      "tags": ["research", "paper", "experiment", "validation"],
+      "trustLevel": "curated",
+      "curated": true,
+      "free": true,
+      "notes": "Builds concrete proof plans from paper claims and evidence gaps.",
+      "sourceType": "local",
+      "sourceRef": {
+        "path": "skills/paper-experiment"
+      }
+    },
+    {
       "slug": "agency-frontend-developer",
       "name": "Agency Frontend Developer",
       "description": "Adapted local skill for accessible, responsive frontend implementation with explicit QA gates.",
@@ -272,6 +362,25 @@
       "notes": [
         "Good default pack for founders, operators, and knowledge workers.",
         "All skills are local curated drafts that install without live registry dependency."
+      ]
+    },
+    {
+      "id": "paper-factory",
+      "name": "Paper Factory Pack",
+      "description": "Local curated pack for stage-aware paper workspace scanning and originality review.",
+      "skills": [
+        "paper-scan",
+        "paper-novelty",
+        "paper-scaffold",
+        "paper-evidence",
+        "paper-orchestrator",
+        "paper-experiment",
+        "doc-systematizer"
+      ],
+      "patchOpenClawConfig": true,
+      "notes": [
+        "Start with manifest and stage detection before novelty or drafting work.",
+        "Includes scan, scaffold, evidence, experiment, and orchestration for fragmented paper materials."
       ]
     },
     {

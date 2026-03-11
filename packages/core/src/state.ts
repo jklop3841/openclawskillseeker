@@ -4,7 +4,9 @@ import type { AppPaths } from "./paths.js";
 
 const emptyState: AppState = {
   installedPacks: [],
-  snapshots: []
+  snapshots: [],
+  activeSkillSlugs: [],
+  activePackIds: []
 };
 
 export async function loadState(paths: AppPaths): Promise<AppState> {
