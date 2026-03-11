@@ -226,6 +226,38 @@ button:disabled {
   font-weight: 700;
 }
 
+.mode-status-banner {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.1rem;
+  border-radius: 22px;
+  border: 1px solid rgba(130, 243, 162, 0.16);
+  background:
+    linear-gradient(180deg, rgba(130, 243, 162, 0.08), rgba(130, 243, 162, 0.02)),
+    rgba(11, 24, 35, 0.72);
+}
+
+.mode-status-banner h3 {
+  margin: 0.25rem 0 0;
+}
+
+.mode-status-banner p {
+  margin-bottom: 0;
+}
+
+.mode-status-pill {
+  flex: 0 0 auto;
+  padding: 0.45rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(130, 243, 162, 0.24);
+  background: rgba(130, 243, 162, 0.12);
+  color: #d8ffe3;
+  font-weight: 700;
+  text-transform: lowercase;
+}
+
 .copy-banner {
   color: #d8fff0;
 }

@@ -323,6 +323,33 @@ function buildGuidedJourney(currentScenario: { scenario: (typeof workScenarios)[
   };
 }
 
+function buildModeReadiness(
+  currentScenario: { scenario: (typeof workScenarios)[number]; pack: ManagedLibrary["packs"][number] } | null,
+  managedLibrary: ManagedLibrary | null
+) {
+  if (currentScenario && managedLibrary) {
+    return {
+      title: `${currentScenario.scenario.title} is live for OpenClaw`,
+      body: `OpenClaw is currently pointed at the ${currentScenario.pack.name} active set. Keep this mode on, restart OpenClaw once, and test with one focused ask.`,
+      status: "ready to test"
+    };
+  }
+
+  if (managedLibrary && managedLibrary.activeSkillSlugs.length > 0) {
+    return {
+      title: "A managed skill set is active",
+      body: "OpenClaw already has a small managed active set. Restart it once, then test with one prompt before switching again.",
+      status: "ready to test"
+    };
+  }
+
+  return {
+    title: "No work mode is active yet",
+    body: "Pick one task card or one managed mode first. We keep the active set intentionally small so OpenClaw stays focused.",
+    status: "choose one mode"
+  };
+}
+
 function managedActionNoun(mode: ManagedLibraryActivation["mode"]) {
   if (mode === "switch-pack" || mode === "switch-skill") return "switched";
   if (mode === "deactivate-all") return "cleared";
@@ -768,6 +795,7 @@ export function App() {
   const promptCard = buildScenarioPromptCard(currentScenario, prompt);
   const modeRationale = buildModeRationale(currentScenario, managedLibrary);
   const guidedJourney = buildGuidedJourney(currentScenario);
+  const modeReadiness = buildModeReadiness(currentScenario, managedLibrary);
   const previousModeAction = useMemo(() => {
     if (!managedLibrary?.recentActions.length) {
       return null;
@@ -1103,6 +1131,14 @@ export function App() {
 
         <article className="panel">
           <h2>Current managed state</h2>
+          <div className="mode-status-banner">
+            <div>
+              <span className="store-label">Now active for this kind of work</span>
+              <h3>{modeReadiness.title}</h3>
+              <p>{modeReadiness.body}</p>
+            </div>
+            <span className="mode-status-pill">{modeReadiness.status}</span>
+          </div>
           <div className="prompt-box">
             <span className="store-label">{managedLibrary?.currentModeTitle ?? "Current mode: loading"}</span>
             <p>{managedLibrary?.currentModeSummary ?? "Checking the currently active managed mode."}</p>
