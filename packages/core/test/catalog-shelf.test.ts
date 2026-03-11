@@ -33,6 +33,8 @@ test("featured shelf UI references curated packs and skills", async () => {
   assert.equal(appSource.includes("Only the currently active mode is exposed to OpenClaw"), true);
   assert.equal(appSource.includes("Test the current active set in OpenClaw"), true);
   assert.equal(appSource.includes("Restart OpenClaw so it reloads the current active set"), true);
+  assert.equal(appSource.includes("Why the managed active set stays small"), true);
+  assert.equal(appSource.includes("Switch back to previous mode"), true);
   assert.equal(appSource.includes("Research and planning"), true);
   assert.equal(appSource.includes("Build and ship"), true);
   assert.equal(appSource.includes("Support and operations"), true);

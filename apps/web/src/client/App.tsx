@@ -250,6 +250,30 @@ function buildScenarioPromptCard(currentScenario: { scenario: (typeof workScenar
   };
 }
 
+function buildModeRationale(currentScenario: { scenario: (typeof workScenarios)[number]; pack: ManagedLibrary["packs"][number] } | null, managedLibrary: ManagedLibrary | null) {
+  if (currentScenario) {
+    return {
+      title: `Why ${currentScenario.scenario.title} is active`,
+      body: `${currentScenario.pack.name} keeps OpenClaw focused on ${currentScenario.scenario.title.toLowerCase()} work instead of forcing it to scan the whole library.`,
+      points: [
+        `Best for: ${currentScenario.scenario.audience}`,
+        `Delivers: ${currentScenario.scenario.deliverable}`,
+        `Active skill count: ${currentScenario.pack.skills.length}`
+      ]
+    };
+  }
+
+  return {
+    title: "Why the managed active set stays small",
+    body: "OpenClaw performs better when it only sees the few skills that match the current job, not the whole library at once.",
+    points: [
+      `Active skills right now: ${managedLibrary?.activeSkillSlugs.length ?? 0}`,
+      "Switch modes when the kind of work changes.",
+      "Use direct skill enables only for narrow exceptions."
+    ]
+  };
+}
+
 function managedActionNoun(mode: ManagedLibraryActivation["mode"]) {
   if (mode === "switch-pack" || mode === "switch-skill") return "switched";
   if (mode === "deactivate-all") return "cleared";
@@ -679,6 +703,25 @@ export function App() {
   const repairCards = buildRepairCards(setupStatus);
   const prompt = buildPrompt(managedResult, attachResult);
   const promptCard = buildScenarioPromptCard(currentScenario, prompt);
+  const modeRationale = buildModeRationale(currentScenario, managedLibrary);
+  const previousModeAction = useMemo(() => {
+    if (!managedLibrary?.recentActions.length) {
+      return null;
+    }
+
+    const currentPackId = managedLibrary.activePackIds[0] ?? null;
+    return (
+      managedLibrary.recentActions.find((entry) => {
+        if (entry.mode !== "switch-pack" && entry.mode !== "pack") {
+          return false;
+        }
+        if (!currentPackId) {
+          return true;
+        }
+        return entry.targetId !== currentPackId;
+      }) ?? null
+    );
+  }, [managedLibrary]);
   const managedTags = useMemo(() => {
     const tags = new Set<string>();
     for (const skill of managedLibrary?.skills ?? []) {
@@ -931,6 +974,32 @@ export function App() {
           <div className="prompt-box">
             <span className="store-label">{managedLibrary?.currentModeTitle ?? "Current mode: loading"}</span>
             <p>{managedLibrary?.currentModeSummary ?? "Checking the currently active managed mode."}</p>
+          </div>
+          <div className="dashboard-grid">
+            <div className="prompt-box compact-prompt">
+              <span className="store-label">{modeRationale.title}</span>
+              <p>{modeRationale.body}</p>
+              <ul className="mini-points">
+                {modeRationale.points.map((point) => <li key={point}>{point}</li>)}
+              </ul>
+            </div>
+            <div className="prompt-box compact-prompt">
+              <span className="store-label">Fast recovery</span>
+              <p>
+                {previousModeAction
+                  ? `If this mode is not the right fit, you can jump back to ${previousModeAction.label.toLowerCase()}.`
+                  : "As you switch more modes, this area will keep the last useful state one click away."}
+              </p>
+              <div className="card-actions">
+                <button
+                  type="button"
+                  disabled={busy || !previousModeAction}
+                  onClick={() => previousModeAction ? void reapplyRecentAction(previousModeAction) : undefined}
+                >
+                  {previousModeAction ? "Switch back to previous mode" : "No previous mode yet"}
+                </button>
+              </div>
+            </div>
           </div>
           <div className="stat"><span>Active skills</span><strong>{managedLibrary?.activeSkillSlugs.length ? managedLibrary.activeSkillSlugs.join(", ") : "none"}</strong></div>
           <div className="stat"><span>Active packs</span><strong>{managedLibrary?.activePackIds.length ? managedLibrary.activePackIds.join(", ") : "none"}</strong></div>

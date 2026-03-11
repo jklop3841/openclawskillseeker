@@ -389,6 +389,13 @@ button:disabled {
   min-height: 300px;
 }
 
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
 .catalog-card h3 {
   margin: 0;
 }
@@ -555,6 +562,20 @@ button:disabled {
 
 .prompt-box p {
   margin: 0.35rem 0 0;
+}
+
+.compact-prompt {
+  margin-top: 0;
+}
+
+.mini-points {
+  margin: 0.75rem 0 0;
+  padding-left: 1.1rem;
+  color: var(--muted);
+}
+
+.mini-points li + li {
+  margin-top: 0.4rem;
 }
 
 .inline-prompt {
