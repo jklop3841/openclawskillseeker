@@ -21,4 +21,6 @@ test("guided install UI keeps onboarding states and success CTA copy", async () 
   assert.equal(appSource.includes("I have OpenClaw, but I still need clawhub"), true);
   assert.equal(appSource.includes("I still need OpenClaw / ClawX"), true);
   assert.equal(appSource.includes("Keep a large curated library in one place"), true);
+  assert.equal(appSource.includes("Use as current mode"), true);
+  assert.equal(appSource.includes("Use this skill only"), true);
 });

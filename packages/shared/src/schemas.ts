@@ -303,7 +303,7 @@ export const SetupStatusSchema = z.object({
 });
 
 export const ManagedLibraryActivationSchema = z.object({
-  mode: z.enum(["skill", "pack", "deactivate-all"]),
+  mode: z.enum(["skill", "pack", "switch-skill", "switch-pack", "deactivate-all"]),
   targetId: z.string(),
   activeSkillSlugs: z.array(z.string()).default([]),
   activePackIds: z.array(z.string()).default([]),

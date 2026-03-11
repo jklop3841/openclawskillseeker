@@ -188,6 +188,12 @@ function buildPrompt(managedResult: ManagedLibraryActivation | null, attachResul
   return "";
 }
 
+function managedActionNoun(mode: ManagedLibraryActivation["mode"]) {
+  if (mode === "switch-pack" || mode === "switch-skill") return "switched";
+  if (mode === "deactivate-all") return "cleared";
+  return "enabled";
+}
+
 function sourceLabel(skill: CatalogSkill) {
   if (skill.sourceType === "local") return "local curated";
   if (skill.trustLevel === "official") return "official registry";
@@ -364,6 +370,34 @@ export function App() {
     }
   }
 
+  async function runManagedSkillSwitch(slug: string) {
+    setBusy(true);
+    setMessage("");
+    setActionLabel(`Switch active mode to skill: ${slug}`);
+    try {
+      const result = await getJson<ManagedLibraryActivation>(`/api/library/skills/${slug}/switch`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+      setManagedResult(result);
+      setAttachResult(null);
+      setAdvancedPayload(result);
+      setResultLines(result.userSummary);
+      setNextStep(result.nextStep);
+      setFailureTitle(result.success ? "" : "Managed switch did not verify cleanly");
+      setFailureBody(result.success ? "" : result.verify.findings.join(" "));
+      setMessage(result.success ? "Managed skill switched. Restart OpenClaw to refresh its skill list." : result.nextStep);
+      await refresh();
+    } catch (error) {
+      const text = error instanceof Error ? error.message : String(error);
+      setFailureTitle("Managed skill switch failed");
+      setFailureBody(text);
+      setMessage(text);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function runManagedPackActivation(packId: string) {
     setBusy(true);
     setMessage("");
@@ -385,6 +419,34 @@ export function App() {
     } catch (error) {
       const text = error instanceof Error ? error.message : String(error);
       setFailureTitle("Managed pack activation failed");
+      setFailureBody(text);
+      setMessage(text);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function runManagedPackSwitch(packId: string) {
+    setBusy(true);
+    setMessage("");
+    setActionLabel(`Switch active mode to pack: ${packId}`);
+    try {
+      const result = await getJson<ManagedLibraryActivation>(`/api/library/packs/${packId}/switch`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+      setManagedResult(result);
+      setAttachResult(null);
+      setAdvancedPayload(result);
+      setResultLines(result.userSummary);
+      setNextStep(result.nextStep);
+      setFailureTitle(result.success ? "" : "Managed switch did not verify cleanly");
+      setFailureBody(result.success ? "" : result.verify.findings.join(" "));
+      setMessage(result.success ? "Managed pack switched. Restart OpenClaw to refresh its skill list." : result.nextStep);
+      await refresh();
+    } catch (error) {
+      const text = error instanceof Error ? error.message : String(error);
+      setFailureTitle("Managed pack switch failed");
       setFailureBody(text);
       setMessage(text);
     } finally {
@@ -572,7 +634,7 @@ export function App() {
             </span>
             {setupStatus ? <span className="chip">{setupStatus.recommendation}</span> : null}
           </div>
-          <button className="primary" disabled={busy} onClick={() => void runManagedPackActivation("knowledge-work")}>Enable Knowledge Work for OpenClaw</button>
+          <button className="primary" disabled={busy} onClick={() => void runManagedPackSwitch("knowledge-work")}>Switch OpenClaw to Knowledge Work</button>
           <button disabled={busy} onClick={() => void refresh()}>Retry environment check</button>
           <button disabled={busy} onClick={() => void clearManagedSkills()}>Clear active skills</button>
           <button disabled={busy} onClick={() => void rollbackLatest()}>Undo last attach</button>
@@ -689,8 +751,11 @@ export function App() {
               {pack.audience ? <p className="catalog-meta"><strong>Best for:</strong> {pack.audience}</p> : null}
               {pack.outcome ? <p className="catalog-meta"><strong>Outcome:</strong> {pack.outcome}</p> : null}
               <div className="card-actions">
-                <button className="primary" disabled={busy || pack.active} onClick={() => void runManagedPackActivation(pack.id)}>{pack.active ? "Already active" : "Enable in OpenClaw"}</button>
-                {pack.active ? <button disabled={busy} onClick={() => void runManagedPackDeactivation(pack.id)}>Disable pack</button> : null}
+                <button className="primary" disabled={busy} onClick={() => void runManagedPackSwitch(pack.id)}>Use as current mode</button>
+                <button disabled={busy || pack.active} onClick={() => void runManagedPackActivation(pack.id)}>
+                  {pack.active ? "Already active" : "Add to current mode"}
+                </button>
+                {pack.active ? <button disabled={busy} onClick={() => void runManagedPackDeactivation(pack.id)}>Remove pack</button> : null}
               </div>
             </article>
           ))}
@@ -721,9 +786,12 @@ export function App() {
               <p>{skill.description}</p>
               <div className="tag-row">{skill.tags.slice(0, 4).map((tag) => <span className="chip" key={tag}>{tag}</span>)}</div>
               <div className="card-actions">
-                <button className="primary" disabled={busy || skill.active} onClick={() => void runManagedSkillActivation(skill.slug)}>{skill.active ? "Already active" : "Enable this skill"}</button>
+                <button className="primary" disabled={busy} onClick={() => void runManagedSkillSwitch(skill.slug)}>Use this skill only</button>
+                <button disabled={busy || skill.active} onClick={() => void runManagedSkillActivation(skill.slug)}>
+                  {skill.active ? "Already active" : "Add this skill"}
+                </button>
                 {skill.activationSource === "manual" || skill.activationSource === "both"
-                  ? <button disabled={busy} onClick={() => void runManagedSkillDeactivation(skill.slug)}>Disable direct enable</button>
+                  ? <button disabled={busy} onClick={() => void runManagedSkillDeactivation(skill.slug)}>Remove direct enable</button>
                   : null}
               </div>
             </article>
@@ -781,7 +849,7 @@ export function App() {
           </div>
         ) : managedResult ? (
           <div className="summary-list">
-            <p>Managed library mode is active.</p>
+            <p>Managed library mode was {managedActionNoun(managedResult.mode)}.</p>
             <p>Active skills: {managedResult.activeSkillSlugs.length > 0 ? managedResult.activeSkillSlugs.join(", ") : "none"}</p>
             <p>Verify result: {managedResult.success ? "passed" : "failed"}</p>
           </div>

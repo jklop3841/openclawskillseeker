@@ -67,47 +67,48 @@ function buildSetupStatus(doctorReport: Awaited<ReturnType<DoctorService["run"]>
   const platformMode = derivePlatformMode(doctorReport);
 
   let status: "ready" | "needs attention" | "blocked" = "ready";
-  let recommendation: "connect-existing" | "install-clawhub" | "install-openclaw" | "check-wsl-path" = "connect-existing";
-  let title = "直接连接现有 OpenClaw";
-  let summary = "已检测到可用环境，现在可以直接安装并接入精选技能。";
+  let recommendation: "connect-existing" | "install-clawhub" | "install-openclaw" | "check-wsl-path" =
+    "connect-existing";
+  let title = "Connect to your existing OpenClaw";
+  let summary = "A usable OpenClaw environment was detected, so you can move straight into curated skill activation.";
   let nextSteps = [
-    "点击 Install and attach Calendar。",
-    "完成后重启 OpenClaw。",
-    "回到 OpenClaw 里测试 calendar skill。"
+    "Enable one managed pack below.",
+    "Restart OpenClaw after the activation finishes.",
+    "Then test the new skill inside OpenClaw."
   ];
 
   if (!hasOpenClawConfig) {
     status = "blocked";
     recommendation = "install-openclaw";
-    title = "先安装 OpenClaw / ClawX";
-    summary = "系统还没有检测到可用的 OpenClaw 配置文件，建议先安装或启动一次底座。";
+    title = "Install OpenClaw or ClawX first";
+    summary = "No usable OpenClaw config was found yet, so there is nothing safe to attach skills to.";
     nextSteps = [
-      "如果你想用图形界面，可以先安装 ClawX。",
-      "如果你想用官方底座，请按 OpenClaw 官方安装文档完成安装。",
-      "安装或启动一次后，回到这里重新检测。"
+      "Install ClawX if you prefer a desktop GUI.",
+      "Or install OpenClaw from the official docs.",
+      "Launch it once, then come back and retry environment check."
     ];
   } else if (!hasClawhub) {
     status = "blocked";
     recommendation = "install-clawhub";
-    title = "先修复技能安装器";
-    summary = "系统已经检测到 OpenClaw，但没有找到 clawhub，所以暂时无法安装技能。";
+    title = "Install clawhub first";
+    summary = "OpenClaw was detected, but clawhub was not found, so registry-backed installs cannot run yet.";
     nextSteps = [
-      "先安装官方 clawhub CLI。",
-      "安装完成后点击 Retry environment check。",
-      "然后再执行一键接入。"
+      "Install the official clawhub CLI.",
+      "Come back here and click Retry environment check.",
+      "Then continue with starter installs if you still need them."
     ];
   } else if (platformMode === "windows" && doctorReport.wslAvailable && !doctorReport.isWsl) {
     status = "needs attention";
     recommendation = "check-wsl-path";
-    title = "确认你的底座运行位置";
-    summary = "这台机器同时具备 Windows 和 WSL 环境。先确认 OpenClaw 跑在哪边，再继续接入。";
+    title = "Confirm whether OpenClaw runs on Windows or WSL";
+    summary = "This machine appears to support both Windows and WSL. Confirm where OpenClaw actually runs before attaching skills.";
     nextSteps = [
-      "如果 OpenClaw 跑在 Windows，继续当前模式即可。",
-      "如果 OpenClaw 跑在 WSL，请优先使用 WSL 路径模式。",
-      "确认后再开始一键接入。"
+      "If OpenClaw runs on Windows, stay on the Windows path.",
+      "If OpenClaw runs inside WSL, prefer the WSL side consistently.",
+      "Then continue with one managed pack."
     ];
   } else if (hasClawX) {
-    summary = "已检测到 OpenClaw/ClawX 环境，可以直接连接并接入精选技能。";
+    summary = "A usable OpenClaw or ClawX environment was detected, so you can move straight into curated skill activation.";
   }
 
   return SetupStatusSchema.parse({
@@ -220,6 +221,16 @@ export function createWebApp() {
     }
   });
 
+  app.post("/api/library/skills/:slug/switch", async (req, res) => {
+    try {
+      const state = await loadState(paths);
+      const result = await activeSkills.switchToSkill(req.params.slug, state);
+      res.json(result.result);
+    } catch (error) {
+      res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
   app.post("/api/library/skills/:slug/deactivate", async (req, res) => {
     try {
       const state = await loadState(paths);
@@ -234,6 +245,16 @@ export function createWebApp() {
     try {
       const state = await loadState(paths);
       const result = await activeSkills.activatePack(req.params.packId, state);
+      res.json(result.result);
+    } catch (error) {
+      res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.post("/api/library/packs/:packId/switch", async (req, res) => {
+    try {
+      const state = await loadState(paths);
+      const result = await activeSkills.switchToPack(req.params.packId, state);
       res.json(result.result);
     } catch (error) {
       res.status(400).json({ error: error instanceof Error ? error.message : String(error) });

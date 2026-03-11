@@ -87,6 +87,36 @@ test("active skill service can activate and deactivate a managed pack while pres
   assert.equal(knowledgePack?.active, false);
 });
 
+test("active skill service can switch the current mode to a single managed pack", async () => {
+  const baseHome = await fs.mkdtemp(path.join(os.tmpdir(), "active-pack-switch-"));
+  const paths = getAppPaths(baseHome);
+
+  await fs.mkdir(path.dirname(paths.openClawConfigPath), { recursive: true });
+  await fs.writeFile(paths.openClawConfigPath, "{\n  \"skills\": { \"load\": { \"extraDirs\": [] } }\n}\n", "utf8");
+
+  const snapshots = new SnapshotService(paths);
+  const config = new ConfigService(paths, snapshots);
+  const reports = new ReportService(paths);
+  const packs = new PackService(paths, {} as never, snapshots, reports, config);
+  const service = new ActiveSkillService(paths, config, packs);
+
+  const preloaded = await service.activateSkill("bug-triage-investigator", {
+    installedPacks: [],
+    snapshots: [],
+    manualSkillSlugs: [],
+    activeSkillSlugs: [],
+    activePackIds: []
+  });
+
+  const switched = await service.switchToPack("business-ops", preloaded.state);
+
+  assert.equal(switched.result.mode, "switch-pack");
+  assert.deepEqual(switched.state.activePackIds, ["business-ops"]);
+  assert.deepEqual(switched.state.manualSkillSlugs, []);
+  assert.equal(switched.state.activeSkillSlugs.includes("customer-support-replier"), true);
+  assert.equal(switched.state.activeSkillSlugs.includes("bug-triage-investigator"), false);
+});
+
 async function fileExists(target: string) {
   try {
     await fs.access(target);

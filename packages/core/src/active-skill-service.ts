@@ -108,6 +108,43 @@ export class ActiveSkillService {
     );
   }
 
+  async switchToSkill(slug: string, state: AppState) {
+    const catalog = loadLocalCatalog();
+    const skill = catalog.skills.find((entry) => entry.slug === slug && entry.curated && entry.sourceType === "local");
+    if (!skill) {
+      throw new Error(`Local curated skill not found: ${slug}`);
+    }
+
+    return this.syncSelection(
+      {
+        mode: "switch-skill",
+        targetId: slug,
+        manualSkillSlugs: [slug],
+        selectedPackIds: []
+      },
+      state
+    );
+  }
+
+  async switchToPack(packId: string, state: AppState) {
+    const catalog = loadLocalCatalog();
+    const localSkills = new Set(catalog.skills.filter((skill) => skill.curated && skill.sourceType === "local").map((skill) => skill.slug));
+    const pack = catalog.packs.find((entry) => entry.id === packId && entry.skills.every((slug) => localSkills.has(slug)));
+    if (!pack) {
+      throw new Error(`Local curated pack not found: ${packId}`);
+    }
+
+    return this.syncSelection(
+      {
+        mode: "switch-pack",
+        targetId: packId,
+        manualSkillSlugs: [],
+        selectedPackIds: [packId]
+      },
+      state
+    );
+  }
+
   async deactivateSkill(slug: string, state: AppState) {
     const nextManualSkills = (state.manualSkillSlugs ?? []).filter((entry) => entry !== slug);
     return this.syncSelection(
@@ -289,6 +326,10 @@ export class ActiveSkillService {
     const prefix =
       mode === "deactivate-all"
         ? "Managed skills were cleared."
+        : mode === "switch-pack"
+          ? `Switched active mode to pack: ${targetId}`
+          : mode === "switch-skill"
+            ? `Switched active mode to skill: ${targetId}`
         : mode === "pack"
           ? `Activated pack: ${targetId}`
           : `Activated skill: ${targetId}`;
