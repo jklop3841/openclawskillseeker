@@ -57,4 +57,7 @@ test("featured shelf UI references curated packs and skills", async () => {
   assert.equal(appSource.includes("Support and operations"), true);
   assert.equal(appSource.includes("Paper Factory"), true);
   assert.equal(appSource.includes("Current scenario"), true);
+  assert.equal(appSource.includes("Active now"), true);
+  assert.equal(appSource.includes("Copy active path"), true);
+  assert.equal(appSource.includes("Current mode test ask copied"), true);
 });

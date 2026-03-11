@@ -932,6 +932,40 @@ export function App() {
       {message ? <section className="banner">{message}</section> : null}
       {copyNotice ? <section className="banner copy-banner">{copyNotice}</section> : null}
 
+      {managedLibrary ? (
+        <section className="panel active-strip">
+          <div className="active-strip-copy">
+            <span className="store-label">Active now</span>
+            <h2>{managedLibrary.currentModeTitle}</h2>
+            <p className="subtle">
+              {managedLibrary.currentModeSummary} Keep the live skill set intentionally small, then test with one focused ask in OpenClaw.
+            </p>
+          </div>
+          <div className="store-stats compact active-strip-stats">
+            <div>
+              <span className="store-label">Active skills</span>
+              <strong>{managedLibrary.activeSkillSlugs.length}</strong>
+            </div>
+            <div>
+              <span className="store-label">Active packs</span>
+              <strong>{managedLibrary.activePackIds.length}</strong>
+            </div>
+            <div>
+              <span className="store-label">Last change</span>
+              <strong>{managedLibrary.recentActions[0]?.label ?? "No changes yet"}</strong>
+            </div>
+          </div>
+          <div className="card-actions">
+            <button disabled={busy} onClick={() => void copyText(managedLibrary.activeSkillsPath, "Managed active path copied")}>
+              Copy active path
+            </button>
+            <button disabled={busy || !promptCard.prompt} onClick={() => void copyText(promptCard.prompt, "Current mode test ask copied")}>
+              Copy test ask
+            </button>
+          </div>
+        </section>
+      ) : null}
+
       <section className="panel">
         <div className="section-head">
           <div>

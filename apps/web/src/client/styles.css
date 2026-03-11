@@ -274,6 +274,25 @@ button:disabled {
   padding: 1.4rem;
 }
 
+.active-strip {
+  display: grid;
+  grid-template-columns: 1.2fr 0.9fr auto;
+  gap: 1rem;
+  align-items: center;
+}
+
+.active-strip h2 {
+  margin: 0.3rem 0 0;
+}
+
+.active-strip-copy p {
+  margin-bottom: 0;
+}
+
+.active-strip-stats {
+  margin: 0;
+}
+
 .subtle {
   color: var(--muted);
 }
@@ -836,6 +855,10 @@ pre {
 
 @media (max-width: 840px) {
   .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .active-strip {
     grid-template-columns: 1fr;
   }
 }
