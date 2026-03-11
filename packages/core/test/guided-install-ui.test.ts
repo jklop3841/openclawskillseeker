@@ -26,4 +26,7 @@ test("guided install UI keeps onboarding states and success CTA copy", async () 
   assert.equal(appSource.includes("Recent changes"), true);
   assert.equal(appSource.includes("Current mode:"), true);
   assert.equal(appSource.includes("Apply again"), true);
+  assert.equal(appSource.includes("Activation proof"), true);
+  assert.equal(appSource.includes("Copy OpenClaw test prompt"), true);
+  assert.equal(appSource.includes("Copy managed path"), true);
 });

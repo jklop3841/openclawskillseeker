@@ -87,6 +87,9 @@ test("active skill service can activate and deactivate a managed pack while pres
   assert.equal(knowledgePack?.active, false);
   assert.equal(library.currentModeTitle.includes("bug-triage-investigator"), true);
   assert.equal(library.recentActions.length > 0, true);
+  assert.equal(library.activeSkillsPath.endsWith(path.join("active-skills", "skills")), true);
+  assert.equal(library.lockFileExists, true);
+  assert.equal(library.skillMdCount, 1);
 });
 
 test("active skill service can switch the current mode to a single managed pack", async () => {
@@ -123,6 +126,7 @@ test("active skill service can switch the current mode to a single managed pack"
   assert.equal(library.recentActions[0]?.label.includes("Switched to pack"), true);
   assert.equal(library.recentActions[0]?.mode, "switch-pack");
   assert.equal(library.recentActions[0]?.targetId, "business-ops");
+  assert.equal(library.skillMdCount >= 1, true);
 });
 
 async function fileExists(target: string) {

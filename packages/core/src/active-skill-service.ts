@@ -66,6 +66,12 @@ export class ActiveSkillService {
       activeSkillSlugs: state.activeSkillSlugs,
       activePackIds: state.activePackIds,
       manualSkillSlugs: state.manualSkillSlugs ?? [],
+      activeRoot: this.paths.activeSkillsRoot,
+      activeSkillsPath: path.join(this.paths.activeSkillsRoot, "skills"),
+      lockFileExists: existsSync(path.join(this.paths.activeSkillsRoot, ".clawhub", "lock.json")),
+      skillMdCount: state.activeSkillSlugs.filter((slug) =>
+        existsSync(path.join(this.paths.activeSkillsRoot, "skills", slug, "SKILL.md"))
+      ).length,
       currentModeTitle: this.describeCurrentMode(state, localPacks),
       currentModeSummary: this.describeCurrentModeSummary(state, localPacks),
       recentActions: (state.managedHistory ?? []).slice(0, 5).map((entry) => ({

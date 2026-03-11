@@ -35,6 +35,10 @@ type ManagedLibrary = {
   activeSkillSlugs: string[];
   activePackIds: string[];
   manualSkillSlugs: string[];
+  activeRoot: string;
+  activeSkillsPath: string;
+  lockFileExists: boolean;
+  skillMdCount: number;
   currentModeTitle: string;
   currentModeSummary: string;
   recentActions: Array<{
@@ -235,6 +239,7 @@ export function App() {
   const [libraryQuery, setLibraryQuery] = useState("");
   const [selectedTag, setSelectedTag] = useState<string>("all");
   const [showActiveOnly, setShowActiveOnly] = useState(false);
+  const [copyNotice, setCopyNotice] = useState("");
 
   async function refresh() {
     const [setupData, catalogData, stateData, libraryData] = await Promise.all([
@@ -257,6 +262,20 @@ export function App() {
   useEffect(() => {
     refresh().catch((error) => setMessage(error instanceof Error ? error.message : String(error)));
   }, []);
+
+  async function copyText(value: string, successLabel: string) {
+    if (!value) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopyNotice(successLabel);
+      window.setTimeout(() => setCopyNotice(""), 2200);
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : String(error));
+    }
+  }
 
   async function runAttach(kind: "calendar" | "demo-safe") {
     setBusy(true);
@@ -676,6 +695,7 @@ export function App() {
       </section>
 
       {message ? <section className="banner">{message}</section> : null}
+      {copyNotice ? <section className="banner copy-banner">{copyNotice}</section> : null}
 
       <section className="panel">
         <div className="section-head">
@@ -722,7 +742,31 @@ export function App() {
           <div className="stat"><span>Active skills</span><strong>{managedLibrary?.activeSkillSlugs.length ? managedLibrary.activeSkillSlugs.join(", ") : "none"}</strong></div>
           <div className="stat"><span>Active packs</span><strong>{managedLibrary?.activePackIds.length ? managedLibrary.activePackIds.join(", ") : "none"}</strong></div>
           <div className="stat"><span>Directly enabled skills</span><strong>{managedLibrary?.manualSkillSlugs.length ? managedLibrary.manualSkillSlugs.join(", ") : "none"}</strong></div>
-          <div className="stat"><span>Managed path</span><strong>{managedResult?.activeRoot ?? "Will appear after first managed activation."}</strong></div>
+          <div className="stat"><span>Managed path</span><strong>{managedLibrary?.activeSkillsPath ?? "Will appear after first managed activation."}</strong></div>
+          <div className="prompt-box">
+            <span className="store-label">Activation proof</span>
+            <p>
+              {managedLibrary
+                ? `Lock file ${managedLibrary.lockFileExists ? "detected" : "not detected"} · ${managedLibrary.skillMdCount} active skill folders currently include SKILL.md.`
+                : "Checking whether the managed active set is fully present on disk."}
+            </p>
+          </div>
+          <div className="card-actions">
+            <button
+              type="button"
+              disabled={busy || !managedLibrary?.activeSkillsPath}
+              onClick={() => void copyText(managedLibrary?.activeSkillsPath ?? "", "Managed path copied")}
+            >
+              Copy managed path
+            </button>
+            <button
+              type="button"
+              disabled={busy || !prompt}
+              onClick={() => void copyText(prompt, "OpenClaw test prompt copied")}
+            >
+              Copy OpenClaw test prompt
+            </button>
+          </div>
           {managedLibrary?.recentActions.length ? (
             <div className="history-box">
               <span className="store-label">Recent changes</span>

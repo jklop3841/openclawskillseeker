@@ -350,6 +350,10 @@ export const ManagedLibrarySnapshotSchema = z.object({
   activeSkillSlugs: z.array(z.string()).default([]),
   activePackIds: z.array(z.string()).default([]),
   manualSkillSlugs: z.array(z.string()).default([]),
+  activeRoot: z.string(),
+  activeSkillsPath: z.string(),
+  lockFileExists: z.boolean().default(false),
+  skillMdCount: z.number().int().nonnegative().default(0),
   currentModeTitle: z.string(),
   currentModeSummary: z.string(),
   recentActions: z.array(

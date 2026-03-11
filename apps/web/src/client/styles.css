@@ -226,6 +226,10 @@ button:disabled {
   font-weight: 700;
 }
 
+.copy-banner {
+  color: #d8fff0;
+}
+
 .grid {
   margin-top: 1rem;
   display: grid;
