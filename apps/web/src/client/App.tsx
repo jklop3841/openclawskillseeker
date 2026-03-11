@@ -890,6 +890,13 @@ export function App() {
     libraryQuery.trim().length > 0 ||
     showActiveOnly ||
     selectedTag !== "all";
+  const hasLatestAction =
+    Boolean(attachResult) ||
+    Boolean(managedResult) ||
+    resultLines.length > 0 ||
+    Boolean(failureTitle) ||
+    Boolean(failureBody) ||
+    Boolean(advancedPayload);
 
   return (
     <main className="shell">
@@ -1449,71 +1456,77 @@ export function App() {
       </section>
 
       <section className="panel">
-        <div className="section-head">
-          <div>
-            <h2>Latest action details</h2>
-            <p className="subtle">This keeps the last activation, result, and troubleshooting details in one place.</p>
+        <details className="library-details secondary-library-details" open={hasLatestAction}>
+          <summary>
+            <div>
+              <strong>Latest action details</strong>
+              <span className="subtle">
+                {hasLatestAction
+                  ? "Open this to review the last activation result, progress, or troubleshooting details."
+                  : "This stays out of the way until you actually run something."}
+              </span>
+            </div>
+          </summary>
+          <div className="grid latest-action-grid">
+            <article className="latest-action-card">
+              <h3>Progress</h3>
+              {attachResult ? (
+                <div className="stages">
+                  {attachResult.stages.map((stage) => (
+                    <article className={`stage stage-${stage.status}`} key={stage.key}>
+                      <strong>{stage.key}</strong>
+                      <span>{stage.status}</span>
+                      <p>{stage.summary}</p>
+                    </article>
+                  ))}
+                </div>
+              ) : managedResult ? (
+                <div className="summary-list">
+                  <p>Managed library mode was {managedActionNoun(managedResult.mode)}.</p>
+                  <p>Active skills: {managedResult.activeSkillSlugs.length > 0 ? managedResult.activeSkillSlugs.join(", ") : "none"}</p>
+                  <p>Verify result: {managedResult.success ? "passed" : "failed"}</p>
+                </div>
+              ) : (
+                <p className="subtle">Run any action and this area will show the current progress.</p>
+              )}
+            </article>
+
+            <article className="latest-action-card">
+              <h3>Result</h3>
+              {resultLines.length > 0 ? (
+                <div className="summary-list">
+                  {resultLines.map((line) => <p key={line}>{line}</p>)}
+                  <p>Next step: <strong>{nextStep}</strong></p>
+                  {prompt ? <div className="prompt-box"><span className="store-label">Test this inside OpenClaw</span><p>{prompt}</p></div> : null}
+                </div>
+              ) : (
+                <p className="subtle">Once you enable or install something, this area will explain the result in plain language.</p>
+              )}
+            </article>
+
+            <article className="latest-action-card">
+              <h3>If something failed</h3>
+              {failureTitle || failureBody ? (
+                <>
+                  <p><strong>{failureTitle}</strong></p>
+                  <p>{failureBody}</p>
+                </>
+              ) : (
+                <p className="subtle">Failure guidance only appears when you actually need to do something.</p>
+              )}
+            </article>
           </div>
-        </div>
-        <div className="grid latest-action-grid">
-          <article className="latest-action-card">
-            <h3>Progress</h3>
-            {attachResult ? (
-              <div className="stages">
-                {attachResult.stages.map((stage) => (
-                  <article className={`stage stage-${stage.status}`} key={stage.key}>
-                    <strong>{stage.key}</strong>
-                    <span>{stage.status}</span>
-                    <p>{stage.summary}</p>
-                  </article>
-                ))}
-              </div>
-            ) : managedResult ? (
-              <div className="summary-list">
-                <p>Managed library mode was {managedActionNoun(managedResult.mode)}.</p>
-                <p>Active skills: {managedResult.activeSkillSlugs.length > 0 ? managedResult.activeSkillSlugs.join(", ") : "none"}</p>
-                <p>Verify result: {managedResult.success ? "passed" : "failed"}</p>
-              </div>
+          <div className="latest-action-footer">
+            {advancedPayload ? (
+              <details>
+                <summary>Show raw result payload</summary>
+                <pre>{JSON.stringify(advancedPayload, null, 2)}</pre>
+              </details>
             ) : (
-              <p className="subtle">Run any action and this area will show the current progress.</p>
+              <p className="subtle">Raw details stay folded away until they are needed.</p>
             )}
-          </article>
-
-          <article className="latest-action-card">
-            <h3>Result</h3>
-            {resultLines.length > 0 ? (
-              <div className="summary-list">
-                {resultLines.map((line) => <p key={line}>{line}</p>)}
-                <p>Next step: <strong>{nextStep}</strong></p>
-                {prompt ? <div className="prompt-box"><span className="store-label">Test this inside OpenClaw</span><p>{prompt}</p></div> : null}
-              </div>
-            ) : (
-              <p className="subtle">Once you enable or install something, this area will explain the result in plain language.</p>
-            )}
-          </article>
-
-          <article className="latest-action-card">
-            <h3>If something failed</h3>
-            {failureTitle || failureBody ? (
-              <>
-                <p><strong>{failureTitle}</strong></p>
-                <p>{failureBody}</p>
-              </>
-            ) : (
-              <p className="subtle">Failure guidance only appears when you actually need to do something.</p>
-            )}
-          </article>
-        </div>
-        <div className="latest-action-footer">
-          {advancedPayload ? (
-            <details>
-              <summary>Show raw result payload</summary>
-              <pre>{JSON.stringify(advancedPayload, null, 2)}</pre>
-            </details>
-          ) : (
-            <p className="subtle">Raw details stay folded away until they are needed.</p>
-          )}
-        </div>
+          </div>
+        </details>
       </section>
     </main>
   );
