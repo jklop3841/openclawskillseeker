@@ -84,6 +84,9 @@ const workScenarios = [
   }
 ] as const;
 
+const scenarioPrompt = (packName: string, scenarioTitle: string) =>
+  `Please list your currently loaded skills, confirm whether the ${packName} mode is active, and then handle my next ${scenarioTitle.toLowerCase()} task with the best matching active skill.`;
+
 async function getJson<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, init);
   const body = await response.json();
@@ -653,6 +656,10 @@ export function App() {
         .filter((entry): entry is { scenario: (typeof workScenarios)[number]; pack: NonNullable<ManagedLibrary["packs"][number]> } => Boolean(entry.pack)),
     [managedLibrary]
   );
+  const currentScenario = useMemo(
+    () => scenarioPacks.find(({ pack }) => pack.active) ?? null,
+    [scenarioPacks]
+  );
   const repairCards = buildRepairCards(setupStatus);
   const prompt = buildPrompt(managedResult, attachResult);
   const managedTags = useMemo(() => {
@@ -747,6 +754,57 @@ export function App() {
       <section className="panel">
         <div className="section-head">
           <div>
+            <h2>Choose what you want OpenClaw to do next</h2>
+            <p className="subtle">
+              Pick one scenario, keep only that active set in front of OpenClaw, then restart OpenClaw and test with one clear prompt.
+            </p>
+          </div>
+        </div>
+        <div className="scenario-lead">
+          <div className="prompt-box">
+            <span className="store-label">Current scenario</span>
+            <p>
+              {currentScenario
+                ? `${currentScenario.scenario.title} is active through ${currentScenario.pack.name}.`
+                : "No scenario is active yet. Choose one scenario below to keep OpenClaw focused."}
+            </p>
+          </div>
+          <div className="prompt-box">
+            <span className="store-label">How this works</span>
+            <p>Only the currently active mode is exposed to OpenClaw. You can switch modes at any time without dumping the whole library into the live skill set.</p>
+          </div>
+        </div>
+        <div className="card-grid">
+          {scenarioPacks.map(({ scenario, pack }) => (
+            <article className={`catalog-card scenario-card ${pack.active ? "catalog-card-active" : ""}`} key={`entry-scenario-${pack.id}`}>
+              <div className="catalog-topline">
+                <span className="chip chip-accent">{scenario.title}</span>
+                <span className={`chip ${pack.active ? "chip-accent" : ""}`}>{pack.active ? "active now" : "switch-ready"}</span>
+              </div>
+              <h3>{scenario.title}</h3>
+              <p>{scenario.summary}</p>
+              <p className="catalog-meta"><strong>Uses mode:</strong> {pack.name}</p>
+              <p className="catalog-meta"><strong>Best for:</strong> {scenario.audience}</p>
+              <p className="catalog-meta"><strong>Delivers:</strong> {scenario.deliverable}</p>
+              <div className="tag-row">
+                {pack.skills.slice(0, 4).map((skill) => <span className="chip" key={`entry-scenario-skill-${pack.id}-${skill}`}>{skill}</span>)}
+              </div>
+              <div className="card-actions">
+                <button className="primary" disabled={busy || pack.active} onClick={() => void runManagedPackSwitch(pack.id)}>
+                  {pack.active ? "Current scenario" : "Switch to this scenario"}
+                </button>
+                <button disabled={busy} onClick={() => void copyText(scenarioPrompt(pack.name, scenario.title), `${scenario.title} prompt copied`)}>
+                  Copy scenario prompt
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="panel">
+        <div className="section-head">
+          <div>
             <h2>Quick mode presets</h2>
             <p className="subtle">Switch OpenClaw to one clear working mode instead of loading too many skills at once.</p>
           </div>
@@ -805,12 +863,7 @@ export function App() {
                 </button>
                 <button
                   disabled={busy}
-                  onClick={() =>
-                    void copyText(
-                      `Please list your currently loaded skills, confirm whether the ${pack.name} mode is active, and then handle my next ${scenario.title.toLowerCase()} task with the best matching active skill.`,
-                      `${scenario.title} prompt copied`
-                    )
-                  }
+                  onClick={() => void copyText(scenarioPrompt(pack.name, scenario.title), `${scenario.title} prompt copied`)}
                 >
                   Copy scenario prompt
                 </button>
