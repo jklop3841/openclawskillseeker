@@ -489,6 +489,22 @@ button:disabled {
   gap: 0.25rem;
 }
 
+.library-summary-stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.library-summary-stats span {
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
 .secondary-library-details {
   border-top: 0;
   padding-top: 0;

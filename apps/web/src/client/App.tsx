@@ -884,6 +884,12 @@ export function App() {
     });
   }, [libraryQuery, managedLibrary, showActiveOnly]);
   const setupNeedsAttention = !setupStatus || setupStatus.status !== "ready";
+  const libraryOpen =
+    !managedLibrary ||
+    managedLibrary.activeSkillSlugs.length === 0 ||
+    libraryQuery.trim().length > 0 ||
+    showActiveOnly ||
+    selectedTag !== "all";
 
   return (
     <main className="shell">
@@ -1241,99 +1247,115 @@ export function App() {
       </section>
 
       <section className="panel">
-        <div className="section-head"><div><h2>Mode library</h2><p className="subtle">Recommended path. Enable only the packs OpenClaw should see right now.</p></div></div>
-        <div className="scenario-lead">
-          <div className="prompt-box">
-            <span className="store-label">Current scenario</span>
-            <p>
-              {currentScenario
-                ? `${currentScenario.scenario.title} is active through ${currentScenario.pack.name}.`
-                : "No scenario is active yet. Choose one task mode above to keep OpenClaw focused."}
-            </p>
-          </div>
-          <div className="prompt-box">
-            <span className="store-label">How the mode library works</span>
-            <p>Only the currently active mode is exposed to OpenClaw. You can still browse the full curated library below without dumping it all into the live skill set.</p>
-          </div>
-        </div>
-        <div className="dashboard-grid">
-          <div className="prompt-box compact-prompt">
-            <span className="store-label">Mode library at a glance</span>
-            <p>Keep OpenClaw focused by switching one pack at a time, then only drop into single-skill tools when you need a narrower override.</p>
-            <div className="store-stats compact">
-              <div>
-                <span className="store-label">Managed packs</span>
-                <strong>{managedLibrary?.packs.length ?? 0}</strong>
-              </div>
-              <div>
-                <span className="store-label">Managed skills</span>
-                <strong>{managedLibrary?.skills.length ?? 0}</strong>
-              </div>
-              <div>
-                <span className="store-label">Active now</span>
-                <strong>{managedLibrary?.activeSkillSlugs.length ?? 0}</strong>
-              </div>
-              <div>
-                <span className="store-label">Direct enables</span>
-                <strong>{managedLibrary?.manualSkillSlugs.length ?? 0}</strong>
-              </div>
+        <details className="library-details" open={libraryOpen}>
+          <summary>
+            <div>
+              <strong>Mode library</strong>
+              <span className="subtle">
+                {managedLibrary?.activeSkillSlugs.length
+                  ? "The current mode is already live. Open this library when you want to switch context or use a narrower override."
+                  : "No mode is active yet. Open the library if you want to browse every curated pack and skill."}
+              </span>
+            </div>
+            <div className="library-summary-stats">
+              <span>{managedLibrary?.packs.length ?? 0} packs</span>
+              <span>{managedLibrary?.skills.length ?? 0} skills</span>
+              <span>{managedLibrary?.activeSkillSlugs.length ?? 0} active now</span>
+            </div>
+          </summary>
+          <div className="scenario-lead">
+            <div className="prompt-box">
+              <span className="store-label">Current scenario</span>
+              <p>
+                {currentScenario
+                  ? `${currentScenario.scenario.title} is active through ${currentScenario.pack.name}.`
+                  : "No scenario is active yet. Choose one task mode above to keep OpenClaw focused."}
+              </p>
+            </div>
+            <div className="prompt-box">
+              <span className="store-label">How the mode library works</span>
+              <p>Only the currently active mode is exposed to OpenClaw. You can still browse the full curated library below without dumping it all into the live skill set.</p>
             </div>
           </div>
-          <div className="prompt-box compact-prompt">
-            <span className="store-label">When to use single-skill tools</span>
-            <p>Stay in pack mode for most work. Only open the single-skill layer if you want one narrow capability without bringing in a whole pack.</p>
-            <ul className="mini-points">
-              <li>Packs are better for full working sessions.</li>
-              <li>Single-skill mode is better for one exact capability.</li>
-              <li>You can always switch back to the previous pack.</li>
-            </ul>
-          </div>
-        </div>
-        <div className="library-toolbar">
-          <label className="search-field">
-            <span className="store-label">Search library</span>
-            <input
-              type="search"
-              value={libraryQuery}
-              placeholder="Search skills, packs, tags, or descriptions"
-              onChange={(event) => setLibraryQuery(event.target.value)}
-            />
-          </label>
-          <div className="filter-group">
-            <span className="store-label">View</span>
-            <button
-              className={showActiveOnly ? "primary" : ""}
-              disabled={busy}
-              onClick={() => setShowActiveOnly((current) => !current)}
-            >
-              {showActiveOnly ? "Showing active only" : "Show active only"}
-            </button>
-          </div>
-        </div>
-        <div className="card-grid">
-          {filteredManagedPacks.map((pack) => (
-            <article className="catalog-card" key={pack.id}>
-              <div className="catalog-topline"><span className="chip chip-local">Managed</span><span className="subtle">{pack.skillCount} skills</span><span className={`chip ${pack.active ? "chip-accent" : ""}`}>{pack.active ? "active" : "inactive"}</span></div>
-              <h3>{pack.name}</h3>
-              <p>{pack.description}</p>
-              <div className="tag-row">
-                {pack.category ? <span className="chip chip-accent">{pack.category}</span> : null}
-                {pack.skills.slice(0, 4).map((skill) => <span className="chip" key={skill}>{skill}</span>)}
+          <div className="dashboard-grid">
+            <div className="prompt-box compact-prompt">
+              <span className="store-label">Mode library at a glance</span>
+              <p>Keep OpenClaw focused by switching one pack at a time, then only drop into single-skill tools when you need a narrower override.</p>
+              <div className="store-stats compact">
+                <div>
+                  <span className="store-label">Managed packs</span>
+                  <strong>{managedLibrary?.packs.length ?? 0}</strong>
+                </div>
+                <div>
+                  <span className="store-label">Managed skills</span>
+                  <strong>{managedLibrary?.skills.length ?? 0}</strong>
+                </div>
+                <div>
+                  <span className="store-label">Active now</span>
+                  <strong>{managedLibrary?.activeSkillSlugs.length ?? 0}</strong>
+                </div>
+                <div>
+                  <span className="store-label">Direct enables</span>
+                  <strong>{managedLibrary?.manualSkillSlugs.length ?? 0}</strong>
+                </div>
               </div>
-              {pack.audience ? <p className="catalog-meta"><strong>Best for:</strong> {pack.audience}</p> : null}
-              {pack.outcome ? <p className="catalog-meta"><strong>Outcome:</strong> {pack.outcome}</p> : null}
-              <div className="card-actions">
-                <button className="primary" disabled={busy} onClick={() => void runManagedPackSwitch(pack.id)}>Use as current mode</button>
-                <button disabled={busy || pack.active} onClick={() => void runManagedPackActivation(pack.id)}>
-                  {pack.active ? "Already active" : "Add to current mode"}
-                </button>
-                {pack.active ? <button disabled={busy} onClick={() => void runManagedPackDeactivation(pack.id)}>Remove pack</button> : null}
-              </div>
-            </article>
-          ))}
-          {managedLibrary && filteredManagedPacks.length === 0 ? <p className="subtle">No managed packs match the current filter.</p> : null}
-          {!managedLibrary ? <p className="subtle">Loading managed library...</p> : null}
-        </div>
+            </div>
+            <div className="prompt-box compact-prompt">
+              <span className="store-label">When to use single-skill tools</span>
+              <p>Stay in pack mode for most work. Only open the single-skill layer if you want one narrow capability without bringing in a whole pack.</p>
+              <ul className="mini-points">
+                <li>Packs are better for full working sessions.</li>
+                <li>Single-skill mode is better for one exact capability.</li>
+                <li>You can always switch back to the previous pack.</li>
+              </ul>
+            </div>
+          </div>
+          <div className="library-toolbar">
+            <label className="search-field">
+              <span className="store-label">Search library</span>
+              <input
+                type="search"
+                value={libraryQuery}
+                placeholder="Search skills, packs, tags, or descriptions"
+                onChange={(event) => setLibraryQuery(event.target.value)}
+              />
+            </label>
+            <div className="filter-group">
+              <span className="store-label">View</span>
+              <button
+                className={showActiveOnly ? "primary" : ""}
+                disabled={busy}
+                onClick={() => setShowActiveOnly((current) => !current)}
+              >
+                {showActiveOnly ? "Showing active only" : "Show active only"}
+              </button>
+            </div>
+          </div>
+          <div className="card-grid">
+            {filteredManagedPacks.map((pack) => (
+              <article className="catalog-card" key={pack.id}>
+                <div className="catalog-topline"><span className="chip chip-local">Managed</span><span className="subtle">{pack.skillCount} skills</span><span className={`chip ${pack.active ? "chip-accent" : ""}`}>{pack.active ? "active" : "inactive"}</span></div>
+                <h3>{pack.name}</h3>
+                <p>{pack.description}</p>
+                <div className="tag-row">
+                  {pack.category ? <span className="chip chip-accent">{pack.category}</span> : null}
+                  {pack.skills.slice(0, 4).map((skill) => <span className="chip" key={skill}>{skill}</span>)}
+                </div>
+                {pack.audience ? <p className="catalog-meta"><strong>Best for:</strong> {pack.audience}</p> : null}
+                {pack.outcome ? <p className="catalog-meta"><strong>Outcome:</strong> {pack.outcome}</p> : null}
+                <div className="card-actions">
+                  <button className="primary" disabled={busy} onClick={() => void runManagedPackSwitch(pack.id)}>Use as current mode</button>
+                  <button disabled={busy || pack.active} onClick={() => void runManagedPackActivation(pack.id)}>
+                    {pack.active ? "Already active" : "Add to current mode"}
+                  </button>
+                  {pack.active ? <button disabled={busy} onClick={() => void runManagedPackDeactivation(pack.id)}>Remove pack</button> : null}
+                </div>
+              </article>
+            ))}
+            {managedLibrary && filteredManagedPacks.length === 0 ? <p className="subtle">No managed packs match the current filter.</p> : null}
+            {!managedLibrary ? <p className="subtle">Loading managed library...</p> : null}
+          </div>
+        </details>
       </section>
 
       <section className="panel">
