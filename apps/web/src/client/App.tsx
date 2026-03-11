@@ -53,6 +53,36 @@ type RepairCard = { title: string; body: string; steps: string[]; level: "blocke
 
 const featuredPackIds = ["demo-safe", "knowledge-work", "delivery-engine", "business-ops"] as const;
 const featuredSkillSlugs = ["calendar", "research-first-decider", "product-brief-writer", "doc-systematizer"] as const;
+const workScenarios = [
+  {
+    packId: "knowledge-work",
+    title: "Research and planning",
+    summary: "Turn notes, transcripts, and rough ideas into briefs, summaries, and structured documentation.",
+    audience: "Founders, operators, researchers",
+    deliverable: "Clear briefs, decisions, and reusable docs"
+  },
+  {
+    packId: "delivery-engine",
+    title: "Build and ship",
+    summary: "Keep OpenClaw focused on implementation, triage, QA gates, and release-readiness work.",
+    audience: "Engineering, QA, product delivery",
+    deliverable: "Cleaner triage, stronger release discipline"
+  },
+  {
+    packId: "business-ops",
+    title: "Support and operations",
+    summary: "Help with customer replies, runbooks, coordination, and repeatable operating procedures.",
+    audience: "Support, operations, cross-functional teams",
+    deliverable: "Calmer support responses and sharper runbooks"
+  },
+  {
+    packId: "paper-factory",
+    title: "Paper Factory",
+    summary: "Keep a paper workspace staged, scanned, and validated without dropping into ad hoc draft chaos.",
+    audience: "Researchers and paper-heavy teams",
+    deliverable: "A tighter manifest-first paper workflow"
+  }
+] as const;
 
 async function getJson<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(url, init);
@@ -613,6 +643,16 @@ export function App() {
         .filter(Boolean) as CatalogSkill[],
     [catalog]
   );
+  const scenarioPacks = useMemo(
+    () =>
+      workScenarios
+        .map((scenario) => ({
+          scenario,
+          pack: managedLibrary?.packs.find((entry) => entry.id === scenario.packId)
+        }))
+        .filter((entry): entry is { scenario: (typeof workScenarios)[number]; pack: NonNullable<ManagedLibrary["packs"][number]> } => Boolean(entry.pack)),
+    [managedLibrary]
+  );
   const repairCards = buildRepairCards(setupStatus);
   const prompt = buildPrompt(managedResult, attachResult);
   const managedTags = useMemo(() => {
@@ -731,6 +771,48 @@ export function App() {
                 </button>
                 <button disabled={busy} onClick={() => void copyText(`Please list your currently loaded skills, confirm whether the ${pack.name} pack is active, and then use the best matching active skill for my next task.`, `${pack.name} test prompt copied`)}>
                   Copy test prompt
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      <section className="panel">
+        <div className="section-head">
+          <div>
+            <h2>Work scenarios</h2>
+            <p className="subtle">Choose the kind of work you want OpenClaw to do next, then switch to the matching curated mode.</p>
+          </div>
+        </div>
+        <div className="card-grid">
+          {scenarioPacks.map(({ scenario, pack }) => (
+            <article className={`catalog-card ${pack.active ? "catalog-card-active" : ""}`} key={`scenario-${pack.id}`}>
+              <div className="catalog-topline">
+                <span className="chip chip-accent">{scenario.title}</span>
+                <span className={`chip ${pack.active ? "chip-accent" : ""}`}>{pack.active ? "active now" : "ready to use"}</span>
+              </div>
+              <h3>{pack.name}</h3>
+              <p>{scenario.summary}</p>
+              <p className="catalog-meta"><strong>Best for:</strong> {scenario.audience}</p>
+              <p className="catalog-meta"><strong>Delivers:</strong> {scenario.deliverable}</p>
+              <div className="tag-row">
+                {pack.skills.slice(0, 5).map((skill) => <span className="chip" key={`scenario-skill-${pack.id}-${skill}`}>{skill}</span>)}
+              </div>
+              <div className="card-actions">
+                <button className="primary" disabled={busy || pack.active} onClick={() => void runManagedPackSwitch(pack.id)}>
+                  {pack.active ? "Current scenario" : "Use this scenario"}
+                </button>
+                <button
+                  disabled={busy}
+                  onClick={() =>
+                    void copyText(
+                      `Please list your currently loaded skills, confirm whether the ${pack.name} mode is active, and then handle my next ${scenario.title.toLowerCase()} task with the best matching active skill.`,
+                      `${scenario.title} prompt copied`
+                    )
+                  }
+                >
+                  Copy scenario prompt
                 </button>
               </div>
             </article>
