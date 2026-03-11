@@ -18,4 +18,7 @@ test("featured shelf UI references curated packs and skills", async () => {
 
   assert.equal(appSource.includes("local curated"), true);
   assert.equal(appSource.includes("Install and attach Calendar"), true);
+  assert.equal(appSource.includes("Enable in OpenClaw"), true);
+  assert.equal(appSource.includes("Disable pack"), true);
+  assert.equal(appSource.includes("enabled by pack"), true);
 });

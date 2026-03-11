@@ -141,6 +141,7 @@ export const InstalledPackSchema = z.object({
 export const AppStateSchema = z.object({
   installedPacks: z.array(InstalledPackSchema).default([]),
   snapshots: z.array(SnapshotManifestSchema).default([]),
+  manualSkillSlugs: z.array(z.string()).default([]),
   activeSkillSlugs: z.array(z.string()).default([]),
   activePackIds: z.array(z.string()).default([])
 });
@@ -309,6 +310,32 @@ export const ManagedLibraryActivationSchema = z.object({
   verify: VerifyPackLayoutSchema,
   userSummary: z.array(z.string()).default([]),
   nextStep: z.string()
+});
+
+export const ManagedLibrarySkillSummarySchema = z.object({
+  slug: z.string(),
+  name: z.string(),
+  description: z.string(),
+  tags: z.array(z.string()).default([]),
+  active: z.boolean().default(false),
+  activationSource: z.enum(["inactive", "manual", "pack", "both"]).default("inactive")
+});
+
+export const ManagedLibraryPackSummarySchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string(),
+  skillCount: z.number().int().nonnegative(),
+  skills: z.array(z.string()).default([]),
+  active: z.boolean().default(false)
+});
+
+export const ManagedLibrarySnapshotSchema = z.object({
+  packs: z.array(ManagedLibraryPackSummarySchema).default([]),
+  skills: z.array(ManagedLibrarySkillSummarySchema).default([]),
+  activeSkillSlugs: z.array(z.string()).default([]),
+  activePackIds: z.array(z.string()).default([]),
+  manualSkillSlugs: z.array(z.string()).default([])
 });
 
 export const InstallPlanSchema = z.object({
@@ -492,6 +519,9 @@ export type AttachFlowResult = z.infer<typeof AttachFlowResultSchema>;
 export type SetupRecommendation = z.infer<typeof SetupRecommendationSchema>;
 export type SetupStatus = z.infer<typeof SetupStatusSchema>;
 export type ManagedLibraryActivation = z.infer<typeof ManagedLibraryActivationSchema>;
+export type ManagedLibrarySkillSummary = z.infer<typeof ManagedLibrarySkillSummarySchema>;
+export type ManagedLibraryPackSummary = z.infer<typeof ManagedLibraryPackSummarySchema>;
+export type ManagedLibrarySnapshot = z.infer<typeof ManagedLibrarySnapshotSchema>;
 export type ReportRecord = z.infer<typeof ReportRecordSchema>;
 export type RollbackVerify = z.infer<typeof RollbackVerifySchema>;
 export type PaperEvidenceNote = z.infer<typeof PaperEvidenceNoteSchema>;

@@ -5,9 +5,9 @@ import { loadLocalCatalog } from "@openclaw-skill-center/catalog";
 import {
   ManagedLibraryActivationSchema,
   type AppState,
-  type CatalogPack,
   type CatalogSkill,
-  type ManagedLibraryActivation
+  type ManagedLibraryActivation,
+  type ManagedLibrarySnapshot
 } from "@openclaw-skill-center/shared";
 import { ensureDir, pathExists, removePath, writeJsonFile } from "./fs.js";
 import { createLogger } from "./logger.js";
@@ -15,21 +15,6 @@ import { type AppPaths } from "./paths.js";
 import { PackService } from "./pack-service.js";
 import { saveState } from "./state.js";
 import { ConfigService } from "./config-service.js";
-
-type PackSummary = {
-  id: string;
-  name: string;
-  description: string;
-  skillCount: number;
-  skills: string[];
-};
-
-type SkillSummary = {
-  slug: string;
-  name: string;
-  description: string;
-  tags: string[];
-};
 
 export class ActiveSkillService {
   private readonly logger = createLogger("active-skill-service");
@@ -40,26 +25,44 @@ export class ActiveSkillService {
     private readonly packService: PackService
   ) {}
 
-  listManagedLibrary() {
+  listManagedLibrary(state: AppState): ManagedLibrarySnapshot {
     const catalog = loadLocalCatalog();
     const localSkills = catalog.skills.filter((skill) => skill.curated && skill.sourceType === "local");
     const localSkillSet = new Set(localSkills.map((skill) => skill.slug));
     const localPacks = catalog.packs.filter((pack) => pack.skills.every((slug) => localSkillSet.has(slug)));
+    const activePackIds = new Set(state.activePackIds);
+    const manualSkillSlugs = new Set(state.manualSkillSlugs ?? []);
+    const packManagedSkills = new Set(
+      localPacks.filter((pack) => activePackIds.has(pack.id)).flatMap((pack) => pack.skills)
+    );
 
     return {
-      packs: localPacks.map((pack): PackSummary => ({
+      packs: localPacks.map((pack) => ({
         id: pack.id,
         name: pack.name,
         description: pack.description,
         skillCount: pack.skills.length,
-        skills: pack.skills
+        skills: pack.skills,
+        active: activePackIds.has(pack.id)
       })),
-      skills: localSkills.map((skill): SkillSummary => ({
+      skills: localSkills.map((skill) => ({
         slug: skill.slug,
         name: skill.name,
         description: skill.description,
-        tags: skill.tags
+        tags: skill.tags,
+        active: state.activeSkillSlugs.includes(skill.slug),
+        activationSource: manualSkillSlugs.has(skill.slug) && packManagedSkills.has(skill.slug)
+          ? "both"
+          : manualSkillSlugs.has(skill.slug)
+            ? "manual"
+            : packManagedSkills.has(skill.slug)
+              ? "pack"
+              : "inactive"
       }))
+      ,
+      activeSkillSlugs: state.activeSkillSlugs,
+      activePackIds: state.activePackIds,
+      manualSkillSlugs: state.manualSkillSlugs ?? []
     };
   }
 
@@ -70,12 +73,12 @@ export class ActiveSkillService {
       throw new Error(`Local curated skill not found: ${slug}`);
     }
 
-    const mergedSkills = [...new Set([...state.activeSkillSlugs, slug])];
+    const mergedSkills = [...new Set([...(state.manualSkillSlugs ?? []), slug])];
     return this.syncSelection(
       {
         mode: "skill",
         targetId: slug,
-        selectedSkillSlugs: mergedSkills,
+        manualSkillSlugs: mergedSkills,
         selectedPackIds: state.activePackIds
       },
       state
@@ -90,14 +93,39 @@ export class ActiveSkillService {
       throw new Error(`Local curated pack not found: ${packId}`);
     }
 
-    const mergedSkills = [...new Set([...state.activeSkillSlugs, ...pack.skills])];
     const mergedPacks = [...new Set([...state.activePackIds, packId])];
     return this.syncSelection(
       {
         mode: "pack",
         targetId: packId,
-        selectedSkillSlugs: mergedSkills,
+        manualSkillSlugs: state.manualSkillSlugs ?? [],
         selectedPackIds: mergedPacks
+      },
+      state
+    );
+  }
+
+  async deactivateSkill(slug: string, state: AppState) {
+    const nextManualSkills = (state.manualSkillSlugs ?? []).filter((entry) => entry !== slug);
+    return this.syncSelection(
+      {
+        mode: "skill",
+        targetId: slug,
+        manualSkillSlugs: nextManualSkills,
+        selectedPackIds: state.activePackIds
+      },
+      state
+    );
+  }
+
+  async deactivatePack(packId: string, state: AppState) {
+    const nextPackIds = state.activePackIds.filter((entry) => entry !== packId);
+    return this.syncSelection(
+      {
+        mode: "pack",
+        targetId: packId,
+        manualSkillSlugs: state.manualSkillSlugs ?? [],
+        selectedPackIds: nextPackIds
       },
       state
     );
@@ -108,7 +136,7 @@ export class ActiveSkillService {
       {
         mode: "deactivate-all",
         targetId: "all",
-        selectedSkillSlugs: [],
+        manualSkillSlugs: [],
         selectedPackIds: []
       },
       state
@@ -119,12 +147,14 @@ export class ActiveSkillService {
     input: {
       mode: ManagedLibraryActivation["mode"];
       targetId: string;
-      selectedSkillSlugs: string[];
+      manualSkillSlugs: string[];
       selectedPackIds: string[];
     },
     state: AppState
   ): Promise<{ result: ManagedLibraryActivation; state: AppState }> {
-    const selectedSkills = this.getSelectedLocalSkills(input.selectedSkillSlugs);
+    const selectedSkills = this.getSelectedLocalSkills(
+      this.expandSelectedSkills(input.manualSkillSlugs, input.selectedPackIds)
+    );
     const activeRoot = this.paths.activeSkillsRoot;
     const skillsDir = path.join(activeRoot, "skills");
 
@@ -164,6 +194,7 @@ export class ActiveSkillService {
 
     let nextState: AppState = {
       ...state,
+      manualSkillSlugs: input.manualSkillSlugs,
       activeSkillSlugs: selectedSkills.map((skill) => skill.slug),
       activePackIds: input.selectedPackIds
     };
@@ -210,6 +241,17 @@ export class ActiveSkillService {
     return slugs
       .map((slug) => localSkills.get(slug))
       .filter((skill): skill is CatalogSkill => Boolean(skill));
+  }
+
+  private expandSelectedSkills(manualSkillSlugs: string[], selectedPackIds: string[]) {
+    const catalog = loadLocalCatalog();
+    const localSkills = new Set(catalog.skills.filter((skill) => skill.curated && skill.sourceType === "local").map((skill) => skill.slug));
+    const activePackSkills = catalog.packs
+      .filter((pack) => selectedPackIds.includes(pack.id))
+      .flatMap((pack) => pack.skills)
+      .filter((slug) => localSkills.has(slug));
+
+    return [...new Set([...manualSkillSlugs, ...activePackSkills])];
   }
 
   private resolveLocalSkillSource(skill: CatalogSkill) {

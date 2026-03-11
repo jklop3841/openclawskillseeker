@@ -13,8 +13,18 @@ import { ExoskeletonMascot } from "./ExoskeletonMascot.js";
 
 type EntryMode = "connect-existing" | "install-clawhub" | "install-openclaw";
 type ManagedLibrary = {
-  packs: Array<{ id: string; name: string; description: string; skillCount: number; skills: string[] }>;
-  skills: Array<{ slug: string; name: string; description: string; tags: string[] }>;
+  packs: Array<{ id: string; name: string; description: string; skillCount: number; skills: string[]; active: boolean }>;
+  skills: Array<{
+    slug: string;
+    name: string;
+    description: string;
+    tags: string[];
+    active: boolean;
+    activationSource: "inactive" | "manual" | "pack" | "both";
+  }>;
+  activeSkillSlugs: string[];
+  activePackIds: string[];
+  manualSkillSlugs: string[];
 };
 type RepairCard = { title: string; body: string; steps: string[]; level: "blocked" | "warning" };
 
@@ -186,6 +196,13 @@ function sourceLabel(skill: CatalogSkill) {
   return "registry";
 }
 
+function activationSourceLabel(source: ManagedLibrary["skills"][number]["activationSource"]) {
+  if (source === "manual") return "enabled directly";
+  if (source === "pack") return "enabled by pack";
+  if (source === "both") return "enabled directly and by pack";
+  return "inactive";
+}
+
 export function App() {
   const [setupStatus, setSetupStatus] = useState<SetupStatus | null>(null);
   const [catalog, setCatalog] = useState<Catalog | null>(null);
@@ -318,6 +335,34 @@ export function App() {
     }
   }
 
+  async function runManagedSkillDeactivation(slug: string) {
+    setBusy(true);
+    setMessage("");
+    setActionLabel(`Disable managed skill: ${slug}`);
+    try {
+      const result = await getJson<ManagedLibraryActivation>(`/api/library/skills/${slug}/deactivate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+      setManagedResult(result);
+      setAttachResult(null);
+      setAdvancedPayload(result);
+      setResultLines(result.userSummary);
+      setNextStep(result.nextStep);
+      setFailureTitle(result.success ? "" : "Managed update did not verify cleanly");
+      setFailureBody(result.success ? "" : result.verify.findings.join(" "));
+      setMessage("Managed skill selection was updated.");
+      await refresh();
+    } catch (error) {
+      const text = error instanceof Error ? error.message : String(error);
+      setFailureTitle("Managed update failed");
+      setFailureBody(text);
+      setMessage(text);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function runManagedPackActivation(packId: string) {
     setBusy(true);
     setMessage("");
@@ -339,6 +384,34 @@ export function App() {
     } catch (error) {
       const text = error instanceof Error ? error.message : String(error);
       setFailureTitle("Managed pack activation failed");
+      setFailureBody(text);
+      setMessage(text);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function runManagedPackDeactivation(packId: string) {
+    setBusy(true);
+    setMessage("");
+    setActionLabel(`Disable managed pack: ${packId}`);
+    try {
+      const result = await getJson<ManagedLibraryActivation>(`/api/library/packs/${packId}/deactivate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" }
+      });
+      setManagedResult(result);
+      setAttachResult(null);
+      setAdvancedPayload(result);
+      setResultLines(result.userSummary);
+      setNextStep(result.nextStep);
+      setFailureTitle(result.success ? "" : "Managed update did not verify cleanly");
+      setFailureBody(result.success ? "" : result.verify.findings.join(" "));
+      setMessage("Managed pack selection was updated.");
+      await refresh();
+    } catch (error) {
+      const text = error instanceof Error ? error.message : String(error);
+      setFailureTitle("Managed update failed");
       setFailureBody(text);
       setMessage(text);
     } finally {
@@ -506,8 +579,9 @@ export function App() {
 
         <article className="panel">
           <h2>Current managed state</h2>
-          <div className="stat"><span>Active skills</span><strong>{state?.activeSkillSlugs.length ? state.activeSkillSlugs.join(", ") : "none"}</strong></div>
-          <div className="stat"><span>Active packs</span><strong>{state?.activePackIds.length ? state.activePackIds.join(", ") : "none"}</strong></div>
+          <div className="stat"><span>Active skills</span><strong>{managedLibrary?.activeSkillSlugs.length ? managedLibrary.activeSkillSlugs.join(", ") : "none"}</strong></div>
+          <div className="stat"><span>Active packs</span><strong>{managedLibrary?.activePackIds.length ? managedLibrary.activePackIds.join(", ") : "none"}</strong></div>
+          <div className="stat"><span>Directly enabled skills</span><strong>{managedLibrary?.manualSkillSlugs.length ? managedLibrary.manualSkillSlugs.join(", ") : "none"}</strong></div>
           <div className="stat"><span>Managed path</span><strong>{managedResult?.activeRoot ?? "Will appear after first managed activation."}</strong></div>
         </article>
       </section>
@@ -543,11 +617,14 @@ export function App() {
         <div className="card-grid">
           {managedLibrary?.packs.map((pack) => (
             <article className="catalog-card" key={pack.id}>
-              <div className="catalog-topline"><span className="chip chip-local">Managed</span><span className="subtle">{pack.skillCount} skills</span></div>
+              <div className="catalog-topline"><span className="chip chip-local">Managed</span><span className="subtle">{pack.skillCount} skills</span><span className={`chip ${pack.active ? "chip-accent" : ""}`}>{pack.active ? "active" : "inactive"}</span></div>
               <h3>{pack.name}</h3>
               <p>{pack.description}</p>
               <div className="tag-row">{pack.skills.slice(0, 4).map((skill) => <span className="chip" key={skill}>{skill}</span>)}</div>
-              <div className="card-actions"><button className="primary" disabled={busy} onClick={() => void runManagedPackActivation(pack.id)}>Enable in OpenClaw</button></div>
+              <div className="card-actions">
+                <button className="primary" disabled={busy || pack.active} onClick={() => void runManagedPackActivation(pack.id)}>{pack.active ? "Already active" : "Enable in OpenClaw"}</button>
+                {pack.active ? <button disabled={busy} onClick={() => void runManagedPackDeactivation(pack.id)}>Disable pack</button> : null}
+              </div>
             </article>
           )) ?? <p className="subtle">Loading managed library...</p>}
         </div>
@@ -558,11 +635,16 @@ export function App() {
         <div className="card-grid">
           {managedLibrary?.skills.map((skill) => (
             <article className="catalog-card skill-card" key={skill.slug}>
-              <div className="catalog-topline"><span className="chip chip-local">local curated</span><span className="subtle">progressive activation</span></div>
+              <div className="catalog-topline"><span className="chip chip-local">local curated</span><span className="subtle">{activationSourceLabel(skill.activationSource)}</span><span className={`chip ${skill.active ? "chip-accent" : ""}`}>{skill.active ? "active" : "inactive"}</span></div>
               <h3>{skill.name}</h3>
               <p>{skill.description}</p>
               <div className="tag-row">{skill.tags.slice(0, 4).map((tag) => <span className="chip" key={tag}>{tag}</span>)}</div>
-              <div className="card-actions"><button className="primary" disabled={busy} onClick={() => void runManagedSkillActivation(skill.slug)}>Enable this skill</button></div>
+              <div className="card-actions">
+                <button className="primary" disabled={busy || skill.active} onClick={() => void runManagedSkillActivation(skill.slug)}>{skill.active ? "Already active" : "Enable this skill"}</button>
+                {skill.activationSource === "manual" || skill.activationSource === "both"
+                  ? <button disabled={busy} onClick={() => void runManagedSkillDeactivation(skill.slug)}>Disable direct enable</button>
+                  : null}
+              </div>
             </article>
           )) ?? <p className="subtle">Loading managed library...</p>}
         </div>

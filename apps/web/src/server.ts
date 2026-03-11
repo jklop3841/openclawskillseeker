@@ -181,8 +181,9 @@ export function createWebApp() {
     res.json(catalog.listCatalog());
   });
 
-  app.get("/api/library", (_req, res) => {
-    res.json(activeSkills.listManagedLibrary());
+  app.get("/api/library", async (_req, res) => {
+    const state = await loadState(paths);
+    res.json(activeSkills.listManagedLibrary(state));
   });
 
   app.get("/api/state", async (_req, res) => {
@@ -219,10 +220,30 @@ export function createWebApp() {
     }
   });
 
+  app.post("/api/library/skills/:slug/deactivate", async (req, res) => {
+    try {
+      const state = await loadState(paths);
+      const result = await activeSkills.deactivateSkill(req.params.slug, state);
+      res.json(result.result);
+    } catch (error) {
+      res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
   app.post("/api/library/packs/:packId/activate", async (req, res) => {
     try {
       const state = await loadState(paths);
       const result = await activeSkills.activatePack(req.params.packId, state);
+      res.json(result.result);
+    } catch (error) {
+      res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
+    }
+  });
+
+  app.post("/api/library/packs/:packId/deactivate", async (req, res) => {
+    try {
+      const state = await loadState(paths);
+      const result = await activeSkills.deactivatePack(req.params.packId, state);
       res.json(result.result);
     } catch (error) {
       res.status(400).json({ error: error instanceof Error ? error.message : String(error) });
