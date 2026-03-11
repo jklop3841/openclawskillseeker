@@ -1151,8 +1151,13 @@ export function App() {
       </section>
 
       <section className="grid">
-        <article className="panel">
-          <h2>Current managed state</h2>
+        <article className="panel current-mode-panel">
+          <div className="section-head">
+            <div>
+              <h2>Current work mode</h2>
+              <p className="subtle">This is the small skill set OpenClaw should see right now.</p>
+            </div>
+          </div>
           <div className="mode-status-banner">
             <div>
               <span className="store-label">Now active for this kind of work</span>
@@ -1161,9 +1166,29 @@ export function App() {
             </div>
             <span className="mode-status-pill">{modeReadiness.status}</span>
           </div>
-          <div className="prompt-box">
-            <span className="store-label">{managedLibrary?.currentModeTitle ?? "Current mode: loading"}</span>
-            <p>{managedLibrary?.currentModeSummary ?? "Checking the currently active managed mode."}</p>
+          <div className="mode-overview-grid">
+            <div className="prompt-box compact-prompt">
+              <span className="store-label">{managedLibrary?.currentModeTitle ?? "Current mode: loading"}</span>
+              <p>{managedLibrary?.currentModeSummary ?? "Checking the currently active managed mode."}</p>
+            </div>
+            <div className="store-stats compact mode-stats-card">
+              <div>
+                <span className="store-label">Live skills</span>
+                <strong>{managedLibrary?.activeSkillSlugs.length ?? 0}</strong>
+              </div>
+              <div>
+                <span className="store-label">Live packs</span>
+                <strong>{managedLibrary?.activePackIds.length ?? 0}</strong>
+              </div>
+              <div>
+                <span className="store-label">Direct overrides</span>
+                <strong>{managedLibrary?.manualSkillSlugs.length ?? 0}</strong>
+              </div>
+              <div>
+                <span className="store-label">Proof</span>
+                <strong>{managedLibrary?.lockFileExists ? "verified" : "checking"}</strong>
+              </div>
+            </div>
           </div>
           <div className="dashboard-grid">
             <div className="prompt-box compact-prompt">
@@ -1189,6 +1214,31 @@ export function App() {
                   {previousModeAction ? "Switch back to previous mode" : "No previous mode yet"}
                 </button>
               </div>
+            </div>
+          </div>
+          <div className="dashboard-grid mode-evidence-grid">
+            <div className="prompt-box compact-prompt">
+              <span className="store-label">What OpenClaw sees now</span>
+              <p>
+                {managedLibrary?.activeSkillSlugs.length
+                  ? managedLibrary.activeSkillSlugs.join(", ")
+                  : "No managed skills are live yet. Pick one task mode first so OpenClaw sees a focused active set."}
+              </p>
+              <ul className="mini-points">
+                <li>{managedLibrary?.activePackIds.length ? `Mode source: ${managedLibrary.activePackIds.join(", ")}` : "Mode source: direct skill selection only"}</li>
+                <li>{managedLibrary?.manualSkillSlugs.length ? `Direct overrides: ${managedLibrary.manualSkillSlugs.join(", ")}` : "Direct overrides: none"}</li>
+              </ul>
+            </div>
+            <div className="prompt-box compact-prompt">
+              <span className="store-label">Activation proof</span>
+              <p>
+                {managedLibrary
+                  ? `${managedLibrary.lockFileExists ? "Lock file detected." : "Lock file not detected yet."} ${managedLibrary.skillMdCount} active skill folders currently include SKILL.md.`
+                  : "Checking whether the managed active set is fully present on disk."}
+              </p>
+              <p className="subtle">
+                Managed path: {managedLibrary?.activeSkillsPath ?? "Will appear after the first managed activation."}
+              </p>
             </div>
           </div>
           <div className="stat"><span>Active skills</span><strong>{managedLibrary?.activeSkillSlugs.length ? managedLibrary.activeSkillSlugs.join(", ") : "none"}</strong></div>

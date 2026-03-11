@@ -451,6 +451,29 @@ button:disabled {
   margin-top: 1rem;
 }
 
+.mode-overview-grid {
+  display: grid;
+  grid-template-columns: minmax(320px, 1.2fr) minmax(240px, 0.8fr);
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.mode-stats-card {
+  align-self: stretch;
+}
+
+.mode-evidence-grid {
+  margin-top: 1rem;
+}
+
+.current-mode-panel > .stat {
+  display: none;
+}
+
+.current-mode-panel > .stat + .stat + .stat + .stat + .prompt-box {
+  display: none;
+}
+
 .next-action-strip {
   display: grid;
   grid-template-columns: minmax(320px, 1.2fr) minmax(240px, 0.8fr);

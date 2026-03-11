@@ -59,6 +59,12 @@ test("featured shelf UI references curated packs and skills", async () => {
   assert.equal(appSource.includes("Paper Factory"), true);
   assert.equal(appSource.includes("Current scenario"), true);
   assert.equal(appSource.includes("Active now"), true);
+  assert.equal(appSource.includes("Current work mode"), true);
+  assert.equal(appSource.includes("This is the small skill set OpenClaw should see right now."), true);
+  assert.equal(appSource.includes("Live skills"), true);
+  assert.equal(appSource.includes("Live packs"), true);
+  assert.equal(appSource.includes("Direct overrides"), true);
+  assert.equal(appSource.includes("What OpenClaw sees now"), true);
   assert.equal(appSource.includes("Copy active path"), true);
   assert.equal(appSource.includes("Current mode test ask copied"), true);
   assert.equal(appSource.includes("Latest action details"), true);
