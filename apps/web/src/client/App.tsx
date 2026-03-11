@@ -219,6 +219,9 @@ export function App() {
   const [failureTitle, setFailureTitle] = useState("");
   const [failureBody, setFailureBody] = useState("");
   const [entryMode, setEntryMode] = useState<EntryMode>("connect-existing");
+  const [libraryQuery, setLibraryQuery] = useState("");
+  const [selectedTag, setSelectedTag] = useState<string>("all");
+  const [showActiveOnly, setShowActiveOnly] = useState(false);
 
   async function refresh() {
     const [setupData, catalogData, stateData, libraryData] = await Promise.all([
@@ -493,6 +496,46 @@ export function App() {
   );
   const repairCards = buildRepairCards(setupStatus);
   const prompt = buildPrompt(managedResult, attachResult);
+  const managedTags = useMemo(() => {
+    const tags = new Set<string>();
+    for (const skill of managedLibrary?.skills ?? []) {
+      for (const tag of skill.tags) {
+        tags.add(tag);
+      }
+    }
+    return ["all", ...[...tags].sort()];
+  }, [managedLibrary]);
+  const filteredManagedSkills = useMemo(() => {
+    const query = libraryQuery.trim().toLowerCase();
+    return (managedLibrary?.skills ?? []).filter((skill) => {
+      if (showActiveOnly && !skill.active) {
+        return false;
+      }
+      if (selectedTag !== "all" && !skill.tags.includes(selectedTag)) {
+        return false;
+      }
+      if (!query) {
+        return true;
+      }
+      return [skill.slug, skill.name, skill.description, ...skill.tags].some((value) =>
+        value.toLowerCase().includes(query)
+      );
+    });
+  }, [libraryQuery, managedLibrary, selectedTag, showActiveOnly]);
+  const filteredManagedPacks = useMemo(() => {
+    const query = libraryQuery.trim().toLowerCase();
+    return (managedLibrary?.packs ?? []).filter((pack) => {
+      if (showActiveOnly && !pack.active) {
+        return false;
+      }
+      if (!query) {
+        return true;
+      }
+      return [pack.id, pack.name, pack.description, ...pack.skills].some((value) =>
+        value.toLowerCase().includes(query)
+      );
+    });
+  }, [libraryQuery, managedLibrary, showActiveOnly]);
 
   return (
     <main className="shell">
@@ -614,8 +657,29 @@ export function App() {
 
       <section className="panel">
         <div className="section-head"><div><h2>Managed local packs</h2><p className="subtle">Recommended path. Enable only the packs OpenClaw should see right now.</p></div></div>
+        <div className="library-toolbar">
+          <label className="search-field">
+            <span className="store-label">Search library</span>
+            <input
+              type="search"
+              value={libraryQuery}
+              placeholder="Search skills, packs, tags, or descriptions"
+              onChange={(event) => setLibraryQuery(event.target.value)}
+            />
+          </label>
+          <div className="filter-group">
+            <span className="store-label">View</span>
+            <button
+              className={showActiveOnly ? "primary" : ""}
+              disabled={busy}
+              onClick={() => setShowActiveOnly((current) => !current)}
+            >
+              {showActiveOnly ? "Showing active only" : "Show active only"}
+            </button>
+          </div>
+        </div>
         <div className="card-grid">
-          {managedLibrary?.packs.map((pack) => (
+          {filteredManagedPacks.map((pack) => (
             <article className="catalog-card" key={pack.id}>
               <div className="catalog-topline"><span className="chip chip-local">Managed</span><span className="subtle">{pack.skillCount} skills</span><span className={`chip ${pack.active ? "chip-accent" : ""}`}>{pack.active ? "active" : "inactive"}</span></div>
               <h3>{pack.name}</h3>
@@ -626,14 +690,28 @@ export function App() {
                 {pack.active ? <button disabled={busy} onClick={() => void runManagedPackDeactivation(pack.id)}>Disable pack</button> : null}
               </div>
             </article>
-          )) ?? <p className="subtle">Loading managed library...</p>}
+          ))}
+          {managedLibrary && filteredManagedPacks.length === 0 ? <p className="subtle">No managed packs match the current filter.</p> : null}
+          {!managedLibrary ? <p className="subtle">Loading managed library...</p> : null}
         </div>
       </section>
 
       <section className="panel">
         <div className="section-head"><div><h2>Managed local skills</h2><p className="subtle">Use this when you want one skill at a time instead of a full pack.</p></div></div>
+        <div className="filter-strip">
+          {managedTags.map((tag) => (
+            <button
+              key={tag}
+              className={selectedTag === tag ? "primary" : ""}
+              disabled={busy}
+              onClick={() => setSelectedTag(tag)}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
         <div className="card-grid">
-          {managedLibrary?.skills.map((skill) => (
+          {filteredManagedSkills.map((skill) => (
             <article className="catalog-card skill-card" key={skill.slug}>
               <div className="catalog-topline"><span className="chip chip-local">local curated</span><span className="subtle">{activationSourceLabel(skill.activationSource)}</span><span className={`chip ${skill.active ? "chip-accent" : ""}`}>{skill.active ? "active" : "inactive"}</span></div>
               <h3>{skill.name}</h3>
@@ -646,7 +724,9 @@ export function App() {
                   : null}
               </div>
             </article>
-          )) ?? <p className="subtle">Loading managed library...</p>}
+          ))}
+          {managedLibrary && filteredManagedSkills.length === 0 ? <p className="subtle">No managed skills match the current filter.</p> : null}
+          {!managedLibrary ? <p className="subtle">Loading managed library...</p> : null}
         </div>
       </section>
 
