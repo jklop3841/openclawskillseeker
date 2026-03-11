@@ -599,6 +599,13 @@ export function App() {
     () => featuredPackIds.map((id) => catalog?.packs.find((pack) => pack.id === id)).filter(Boolean) as CatalogPack[],
     [catalog]
   );
+  const featuredManagedPacks = useMemo(
+    () =>
+      featuredPackIds
+        .map((id) => managedLibrary?.packs.find((pack) => pack.id === id))
+        .filter(Boolean) as ManagedLibrary["packs"],
+    [managedLibrary]
+  );
   const featuredSkills = useMemo(
     () =>
       featuredSkillSlugs
@@ -696,6 +703,40 @@ export function App() {
 
       {message ? <section className="banner">{message}</section> : null}
       {copyNotice ? <section className="banner copy-banner">{copyNotice}</section> : null}
+
+      <section className="panel">
+        <div className="section-head">
+          <div>
+            <h2>Quick mode presets</h2>
+            <p className="subtle">Switch OpenClaw to one clear working mode instead of loading too many skills at once.</p>
+          </div>
+        </div>
+        <div className="card-grid">
+          {featuredManagedPacks.map((pack) => (
+            <article className={`catalog-card ${pack.active ? "catalog-card-active" : ""}`} key={`preset-${pack.id}`}>
+              <div className="catalog-topline">
+                <span className="chip chip-local">{pack.category ?? "managed"}</span>
+                <span className={`chip ${pack.active ? "chip-accent" : ""}`}>{pack.active ? "current mode" : "available"}</span>
+              </div>
+              <h3>{pack.name}</h3>
+              <p>{pack.description}</p>
+              {pack.audience ? <p className="catalog-meta"><strong>Best for:</strong> {pack.audience}</p> : null}
+              {pack.outcome ? <p className="catalog-meta"><strong>Delivers:</strong> {pack.outcome}</p> : null}
+              <div className="tag-row">
+                {pack.skills.slice(0, 4).map((skill) => <span className="chip" key={`preset-skill-${pack.id}-${skill}`}>{skill}</span>)}
+              </div>
+              <div className="card-actions">
+                <button className="primary" disabled={busy || pack.active} onClick={() => void runManagedPackSwitch(pack.id)}>
+                  {pack.active ? "Current mode" : "Switch to this mode"}
+                </button>
+                <button disabled={busy} onClick={() => void copyText(`Please list your currently loaded skills, confirm whether the ${pack.name} pack is active, and then use the best matching active skill for my next task.`, `${pack.name} test prompt copied`)}>
+                  Copy test prompt
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
 
       <section className="panel">
         <div className="section-head">
