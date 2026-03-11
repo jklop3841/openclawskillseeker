@@ -790,6 +790,35 @@ export function App() {
     () => taskCards.find(({ task }) => task.packId === "paper-factory") ?? null,
     [taskCards]
   );
+  const nextTaskAction = useMemo(() => {
+    if (currentScenario) {
+      const matchingTask = taskCards.find(({ pack }) => pack.id === currentScenario.pack.id);
+      if (matchingTask) {
+        return {
+          title: `Stay in ${matchingTask.task.title}`,
+          body: `OpenClaw is already pointed at ${matchingTask.pack.name}. The shortest path now is to restart OpenClaw once and test with one focused ask.`,
+          buttonLabel: "Task mode already active",
+          prompt: matchingTask.task.sampleAsk,
+          packId: matchingTask.pack.id,
+          isActive: true
+        };
+      }
+    }
+
+    const recommended = taskCards[0] ?? null;
+    if (!recommended) {
+      return null;
+    }
+
+    return {
+      title: `Start with ${recommended.task.title}`,
+      body: `If you want the fastest route to a useful result, switch into ${recommended.pack.name}, keep the active set small, and then test right away inside OpenClaw.`,
+      buttonLabel: "Start recommended task",
+      prompt: recommended.task.sampleAsk,
+      packId: recommended.pack.id,
+      isActive: false
+    };
+  }, [currentScenario, taskCards]);
   const repairCards = buildRepairCards(setupStatus);
   const prompt = buildPrompt(managedResult, attachResult);
   const promptCard = buildScenarioPromptCard(currentScenario, prompt);
@@ -970,6 +999,43 @@ export function App() {
           ))}
         </div>
       </section>
+
+      {nextTaskAction ? (
+        <section className="panel">
+          <div className="section-head">
+            <div>
+              <h2>Do this next</h2>
+              <p className="subtle">One focused mode, one restart, one prompt.</p>
+            </div>
+          </div>
+          <div className="next-action-strip">
+            <div className="prompt-box compact-prompt">
+              <span className="store-label">{nextTaskAction.title}</span>
+              <p>{nextTaskAction.body}</p>
+              <code className="inline-prompt">{nextTaskAction.prompt}</code>
+            </div>
+            <div className="next-action-controls">
+              <ol className="step-list compact-list">
+                <li>{nextTaskAction.isActive ? "Keep the current task mode active." : "Switch to the recommended task mode."}</li>
+                <li>Restart OpenClaw once.</li>
+                <li>Paste the ask into OpenClaw.</li>
+              </ol>
+              <div className="card-actions">
+                <button
+                  className="primary"
+                  disabled={busy || nextTaskAction.isActive}
+                  onClick={() => void runManagedPackSwitch(nextTaskAction.packId)}
+                >
+                  {nextTaskAction.buttonLabel}
+                </button>
+                <button disabled={busy} onClick={() => void copyText(nextTaskAction.prompt, "Next ask copied")}>
+                  Copy next ask
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <section className="panel">
         <div className="section-head">

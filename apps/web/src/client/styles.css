@@ -432,6 +432,19 @@ button:disabled {
   margin-top: 1rem;
 }
 
+.next-action-strip {
+  display: grid;
+  grid-template-columns: minmax(320px, 1.2fr) minmax(240px, 0.8fr);
+  gap: 1rem;
+}
+
+.next-action-controls {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
 .spotlight-box {
   border-color: rgba(255, 179, 71, 0.28);
   background:
