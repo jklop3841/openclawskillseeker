@@ -389,6 +389,10 @@ button:disabled {
   min-height: 300px;
 }
 
+.launcher-card {
+  min-height: 320px;
+}
+
 .dashboard-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));

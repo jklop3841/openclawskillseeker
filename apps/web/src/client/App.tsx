@@ -84,6 +84,33 @@ const workScenarios = [
   }
 ] as const;
 
+const taskLaunchers = [
+  {
+    packId: "knowledge-work",
+    title: "Research and write a plan",
+    summary: "Turn notes, transcripts, and rough ideas into a clearer brief, summary, or working plan.",
+    sampleAsk: "Summarize these notes and turn them into a structured plan."
+  },
+  {
+    packId: "delivery-engine",
+    title: "Ship a change",
+    summary: "Keep OpenClaw focused on delivery, QA gates, release checks, and implementation flow.",
+    sampleAsk: "Review this change, find delivery risks, and tell me what must happen before release."
+  },
+  {
+    packId: "business-ops",
+    title: "Handle support or operations",
+    summary: "Use support, runbook, and operations skills without loading unrelated modes.",
+    sampleAsk: "Draft a calm customer reply and tell me the next operating step."
+  },
+  {
+    packId: "paper-factory",
+    title: "Work on a paper",
+    summary: "Keep paper work manifest-first, structured, and staged instead of drifting into draft chaos.",
+    sampleAsk: "Scan this paper workspace, tell me the current stage, and list the blocking gaps."
+  }
+] as const;
+
 const scenarioPrompt = (packName: string, scenarioTitle: string) =>
   `Please list your currently loaded skills, confirm whether the ${packName} mode is active, and then handle my next ${scenarioTitle.toLowerCase()} task with the best matching active skill.`;
 
@@ -696,6 +723,16 @@ export function App() {
         .filter((entry): entry is { scenario: (typeof workScenarios)[number]; pack: NonNullable<ManagedLibrary["packs"][number]> } => Boolean(entry.pack)),
     [managedLibrary]
   );
+  const taskCards = useMemo(
+    () =>
+      taskLaunchers
+        .map((task) => ({
+          task,
+          pack: managedLibrary?.packs.find((entry) => entry.id === task.packId)
+        }))
+        .filter((entry): entry is { task: (typeof taskLaunchers)[number]; pack: NonNullable<ManagedLibrary["packs"][number]> } => Boolean(entry.pack)),
+    [managedLibrary]
+  );
   const currentScenario = useMemo(
     () => scenarioPacks.find(({ pack }) => pack.active) ?? null,
     [scenarioPacks]
@@ -810,6 +847,42 @@ export function App() {
 
       {message ? <section className="banner">{message}</section> : null}
       {copyNotice ? <section className="banner copy-banner">{copyNotice}</section> : null}
+
+      <section className="panel">
+        <div className="section-head">
+          <div>
+            <h2>Start from the task you need right now</h2>
+            <p className="subtle">
+              Choose a real job to do. We will switch OpenClaw to the matching mode, keep the live skill set small, and give you a prompt to test.
+            </p>
+          </div>
+        </div>
+        <div className="card-grid">
+          {taskCards.map(({ task, pack }) => (
+            <article className={`catalog-card launcher-card ${pack.active ? "catalog-card-active" : ""}`} key={`task-${pack.id}`}>
+              <div className="catalog-topline">
+                <span className="chip chip-accent">Task-first</span>
+                <span className={`chip ${pack.active ? "chip-accent" : ""}`}>{pack.active ? "active now" : "ready"}</span>
+              </div>
+              <h3>{task.title}</h3>
+              <p>{task.summary}</p>
+              <p className="catalog-meta"><strong>Switches to:</strong> {pack.name}</p>
+              <div className="prompt-box compact-prompt">
+                <span className="store-label">Try asking OpenClaw</span>
+                <p>{task.sampleAsk}</p>
+              </div>
+              <div className="card-actions">
+                <button className="primary" disabled={busy || pack.active} onClick={() => void runManagedPackSwitch(pack.id)}>
+                  {pack.active ? "Current task mode" : "Start this task mode"}
+                </button>
+                <button disabled={busy} onClick={() => void copyText(task.sampleAsk, `${task.title} sample ask copied`)}>
+                  Copy sample ask
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
 
       <section className="panel">
         <div className="section-head">

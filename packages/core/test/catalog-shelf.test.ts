@@ -26,6 +26,12 @@ test("featured shelf UI references curated packs and skills", async () => {
   assert.equal(appSource.includes("Search library"), true);
   assert.equal(appSource.includes("Show active only"), true);
   assert.equal(appSource.includes("Quick mode presets"), true);
+  assert.equal(appSource.includes("Start from the task you need right now"), true);
+  assert.equal(appSource.includes("Research and write a plan"), true);
+  assert.equal(appSource.includes("Ship a change"), true);
+  assert.equal(appSource.includes("Handle support or operations"), true);
+  assert.equal(appSource.includes("Start this task mode"), true);
+  assert.equal(appSource.includes("Copy sample ask"), true);
   assert.equal(appSource.includes("Switch to this mode"), true);
   assert.equal(appSource.includes("Copy test prompt"), true);
   assert.equal(appSource.includes("Work scenarios"), true);
