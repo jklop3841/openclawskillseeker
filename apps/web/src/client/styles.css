@@ -542,6 +542,19 @@ button:disabled {
   margin: 0.35rem 0 0;
 }
 
+.history-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.history-entry p {
+  margin: 0;
+  flex: 1;
+}
+
 pre {
   overflow: auto;
   padding: 1rem;

@@ -121,6 +121,8 @@ test("active skill service can switch the current mode to a single managed pack"
   assert.equal(library.currentModeTitle.includes("Business Ops Pack"), true);
   assert.equal(library.currentModeSummary.includes("Business Ops Pack"), true);
   assert.equal(library.recentActions[0]?.label.includes("Switched to pack"), true);
+  assert.equal(library.recentActions[0]?.mode, "switch-pack");
+  assert.equal(library.recentActions[0]?.targetId, "business-ops");
 });
 
 async function fileExists(target: string) {

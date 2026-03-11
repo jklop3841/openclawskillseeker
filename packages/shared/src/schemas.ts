@@ -356,6 +356,8 @@ export const ManagedLibrarySnapshotSchema = z.object({
     z.object({
       at: z.string(),
       label: z.string(),
+      mode: z.enum(["skill", "pack", "switch-skill", "switch-pack", "deactivate-all"]),
+      targetId: z.string(),
       activeSkillSlugs: z.array(z.string()).default([])
     })
   ).default([])

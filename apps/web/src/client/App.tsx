@@ -40,6 +40,8 @@ type ManagedLibrary = {
   recentActions: Array<{
     at: string;
     label: string;
+    mode: ManagedLibraryActivation["mode"];
+    targetId: string;
     activeSkillSlugs: string[];
   }>;
 };
@@ -517,6 +519,30 @@ export function App() {
     }
   }
 
+  async function reapplyRecentAction(entry: ManagedLibrary["recentActions"][number]) {
+    if (entry.mode === "deactivate-all") {
+      await clearManagedSkills();
+      return;
+    }
+
+    if (entry.mode === "pack") {
+      await runManagedPackActivation(entry.targetId);
+      return;
+    }
+
+    if (entry.mode === "switch-pack") {
+      await runManagedPackSwitch(entry.targetId);
+      return;
+    }
+
+    if (entry.mode === "switch-skill") {
+      await runManagedSkillSwitch(entry.targetId);
+      return;
+    }
+
+    await runManagedSkillActivation(entry.targetId);
+  }
+
   async function rollbackLatest() {
     const latest = state?.snapshots.at(-1);
     if (!latest) {
@@ -701,10 +727,20 @@ export function App() {
             <div className="history-box">
               <span className="store-label">Recent changes</span>
               {managedLibrary.recentActions.map((entry) => (
-                <p key={`${entry.at}-${entry.label}`}>
-                  {entry.label}
-                  {entry.activeSkillSlugs.length > 0 ? ` -> ${entry.activeSkillSlugs.join(", ")}` : ""}
-                </p>
+                <div key={`${entry.at}-${entry.label}`} className="history-entry">
+                  <p>
+                    {entry.label}
+                    {entry.activeSkillSlugs.length > 0 ? ` -> ${entry.activeSkillSlugs.join(", ")}` : ""}
+                  </p>
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => reapplyRecentAction(entry)}
+                    disabled={busy}
+                  >
+                    Apply again
+                  </button>
+                </div>
               ))}
             </div>
           ) : null}

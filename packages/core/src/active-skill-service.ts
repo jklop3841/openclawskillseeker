@@ -71,6 +71,8 @@ export class ActiveSkillService {
       recentActions: (state.managedHistory ?? []).slice(0, 5).map((entry) => ({
         at: entry.at,
         label: this.describeHistoryEntry(entry, localPacks),
+        mode: entry.mode,
+        targetId: entry.targetId,
         activeSkillSlugs: entry.activeSkillSlugs
       }))
     };
