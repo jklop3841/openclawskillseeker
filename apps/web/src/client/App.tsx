@@ -1422,57 +1422,71 @@ export function App() {
       </section>
 
       <section className="panel">
-        <h2>Execution progress</h2>
-        {attachResult ? (
-          <div className="stages">
-            {attachResult.stages.map((stage) => (
-              <article className={`stage stage-${stage.status}`} key={stage.key}>
-                <strong>{stage.key}</strong>
-                <span>{stage.status}</span>
-                <p>{stage.summary}</p>
-              </article>
-            ))}
+        <div className="section-head">
+          <div>
+            <h2>Latest action details</h2>
+            <p className="subtle">This keeps the last activation, result, and troubleshooting details in one place.</p>
           </div>
-        ) : managedResult ? (
-          <div className="summary-list">
-            <p>Managed library mode was {managedActionNoun(managedResult.mode)}.</p>
-            <p>Active skills: {managedResult.activeSkillSlugs.length > 0 ? managedResult.activeSkillSlugs.join(", ") : "none"}</p>
-            <p>Verify result: {managedResult.success ? "passed" : "failed"}</p>
-          </div>
-        ) : (
-          <p className="subtle">Run any action and this area will show the current progress.</p>
-        )}
-      </section>
+        </div>
+        <div className="grid latest-action-grid">
+          <article className="latest-action-card">
+            <h3>Progress</h3>
+            {attachResult ? (
+              <div className="stages">
+                {attachResult.stages.map((stage) => (
+                  <article className={`stage stage-${stage.status}`} key={stage.key}>
+                    <strong>{stage.key}</strong>
+                    <span>{stage.status}</span>
+                    <p>{stage.summary}</p>
+                  </article>
+                ))}
+              </div>
+            ) : managedResult ? (
+              <div className="summary-list">
+                <p>Managed library mode was {managedActionNoun(managedResult.mode)}.</p>
+                <p>Active skills: {managedResult.activeSkillSlugs.length > 0 ? managedResult.activeSkillSlugs.join(", ") : "none"}</p>
+                <p>Verify result: {managedResult.success ? "passed" : "failed"}</p>
+              </div>
+            ) : (
+              <p className="subtle">Run any action and this area will show the current progress.</p>
+            )}
+          </article>
 
-      <section className="grid">
-        <article className="panel">
-          <h2>User result</h2>
-          {resultLines.length > 0 ? (
-            <div className="summary-list">
-              {resultLines.map((line) => <p key={line}>{line}</p>)}
-              <p>Next step: <strong>{nextStep}</strong></p>
-              {prompt ? <div className="prompt-box"><span className="store-label">Test this inside OpenClaw</span><p>{prompt}</p></div> : null}
-            </div>
+          <article className="latest-action-card">
+            <h3>Result</h3>
+            {resultLines.length > 0 ? (
+              <div className="summary-list">
+                {resultLines.map((line) => <p key={line}>{line}</p>)}
+                <p>Next step: <strong>{nextStep}</strong></p>
+                {prompt ? <div className="prompt-box"><span className="store-label">Test this inside OpenClaw</span><p>{prompt}</p></div> : null}
+              </div>
+            ) : (
+              <p className="subtle">Once you enable or install something, this area will explain the result in plain language.</p>
+            )}
+          </article>
+
+          <article className="latest-action-card">
+            <h3>If something failed</h3>
+            {failureTitle || failureBody ? (
+              <>
+                <p><strong>{failureTitle}</strong></p>
+                <p>{failureBody}</p>
+              </>
+            ) : (
+              <p className="subtle">Failure guidance only appears when you actually need to do something.</p>
+            )}
+          </article>
+        </div>
+        <div className="latest-action-footer">
+          {advancedPayload ? (
+            <details>
+              <summary>Show raw result payload</summary>
+              <pre>{JSON.stringify(advancedPayload, null, 2)}</pre>
+            </details>
           ) : (
-            <p className="subtle">Once you enable or install something, this area will explain the result in plain language.</p>
+            <p className="subtle">Raw details stay folded away until they are needed.</p>
           )}
-        </article>
-
-        <article className="panel">
-          <h2>If something failed</h2>
-          {failureTitle || failureBody ? (<><p><strong>{failureTitle}</strong></p><p>{failureBody}</p></>) : (
-            <p className="subtle">Failure guidance only appears when you actually need to do something.</p>
-          )}
-        </article>
-      </section>
-
-      <section className="panel">
-        <h2>Advanced details</h2>
-        {advancedPayload ? (
-          <details><summary>Show raw result payload</summary><pre>{JSON.stringify(advancedPayload, null, 2)}</pre></details>
-        ) : (
-          <p className="subtle">Raw details stay folded away until they are needed.</p>
-        )}
+        </div>
       </section>
     </main>
   );

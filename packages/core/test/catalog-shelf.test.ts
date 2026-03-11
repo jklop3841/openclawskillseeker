@@ -60,4 +60,6 @@ test("featured shelf UI references curated packs and skills", async () => {
   assert.equal(appSource.includes("Active now"), true);
   assert.equal(appSource.includes("Copy active path"), true);
   assert.equal(appSource.includes("Current mode test ask copied"), true);
+  assert.equal(appSource.includes("Latest action details"), true);
+  assert.equal(appSource.includes("This keeps the last activation, result, and troubleshooting details in one place."), true);
 });
