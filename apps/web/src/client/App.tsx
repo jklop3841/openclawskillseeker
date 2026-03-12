@@ -65,7 +65,8 @@ type SavedManagedPack = {
 type RepairCard = { title: string; body: string; steps: string[]; level: "blocked" | "warning" };
 
 const featuredPackIds = ["demo-safe", "knowledge-work", "delivery-engine", "business-ops"] as const;
-const featuredSkillSlugs = ["calendar", "research-first-decider", "product-brief-writer", "doc-systematizer"] as const;
+const starterInstallPackIds = ["demo-safe", "global-whitelist", "knowledge-work", "delivery-engine", "business-ops"] as const;
+const featuredSkillSlugs = ["summarize", "calendar", "prompt-engineering-expert", "slides"] as const;
 const workScenarios = [
   {
     packId: "knowledge-work",
@@ -845,7 +846,7 @@ export function App() {
   }
 
   const featuredPacks = useMemo(
-    () => featuredPackIds.map((id) => catalog?.packs.find((pack) => pack.id === id)).filter(Boolean) as CatalogPack[],
+    () => starterInstallPackIds.map((id) => catalog?.packs.find((pack) => pack.id === id)).filter(Boolean) as CatalogPack[],
     [catalog]
   );
   const featuredManagedPacks = useMemo(
@@ -1692,10 +1693,20 @@ export function App() {
         <details className="library-details secondary-library-details">
           <summary>
             <div>
-              <strong>Starter online installs</strong>
-              <span className="subtle">Registry-backed starter flows remain available as an advanced option.</span>
+              <strong>Advanced catalog and starter installs</strong>
+              <span className="subtle">Optional starter installs and broader catalog examples stay here when you want more than the main guided mode flow.</span>
             </div>
           </summary>
+          <div className="dashboard-grid">
+            <div className="prompt-box compact-prompt">
+              <span className="store-label">Starter online installs</span>
+              <p>Registry-backed starter flows remain available as an advanced option when you want to extend beyond the managed local library.</p>
+            </div>
+            <div className="prompt-box compact-prompt">
+              <span className="store-label">Representative catalog skills</span>
+              <p>A quick view of what exists in the broader catalog beyond the default starter path and current managed modes.</p>
+            </div>
+          </div>
           <div className="card-grid">
             {featuredPacks.map((pack) => (
               <article className="catalog-card" key={pack.id}>
@@ -1712,17 +1723,6 @@ export function App() {
               </article>
             ))}
           </div>
-        </details>
-      </section>
-
-      <section className="panel">
-        <details className="library-details secondary-library-details">
-          <summary>
-            <div>
-              <strong>Representative catalog skills</strong>
-              <span className="subtle">A quick view of what exists in the catalog beyond the default starter path.</span>
-            </div>
-          </summary>
           <div className="card-grid">
             {featuredSkills.map((skill) => (
               <article className="catalog-card skill-card" key={skill.slug}>
