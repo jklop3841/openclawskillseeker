@@ -1123,6 +1123,14 @@ export function App() {
               <strong>{managedLibrary.recentActions[0]?.label ?? "No changes yet"}</strong>
             </div>
           </div>
+          <div className="prompt-box compact-prompt">
+            <span className="store-label">Use this mode in OpenClaw now</span>
+            <p>
+              Restart OpenClaw once, then paste one focused ask so it works against the current managed skill set instead
+              of the full library.
+            </p>
+            <code className="inline-prompt">{promptCard.prompt}</code>
+          </div>
           <div className="card-actions">
             <button disabled={busy} onClick={() => void copyText(managedLibrary.activeSkillsPath, "Managed active path copied")}>
               Copy active path
@@ -1472,9 +1480,9 @@ export function App() {
             <button
               type="button"
               disabled={busy || !prompt}
-              onClick={() => void copyText(prompt, "OpenClaw test prompt copied")}
+              onClick={() => void copyText(prompt, "OpenClaw test ask copied")}
             >
-              Copy OpenClaw test prompt
+              Copy OpenClaw test ask
             </button>
           </div>
           <div className="prompt-box">
