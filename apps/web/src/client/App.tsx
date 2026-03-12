@@ -1037,6 +1037,7 @@ export function App() {
     libraryQuery.trim().length > 0 ||
     showActiveOnly ||
     selectedTag !== "all";
+  const showNextTaskPanel = Boolean(nextTaskAction && !nextTaskAction.isActive);
   const hasLatestAction =
     Boolean(attachResult) ||
     Boolean(managedResult) ||
@@ -1251,7 +1252,7 @@ export function App() {
         </div>
       </section>
 
-      {nextTaskAction ? (
+      {showNextTaskPanel && nextTaskAction ? (
         <section className="panel">
           <div className="section-head">
             <div>
