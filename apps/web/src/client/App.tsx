@@ -1038,6 +1038,11 @@ export function App() {
     libraryQuery.trim().length > 0 ||
     showActiveOnly ||
     selectedTag !== "all";
+  const singleSkillToolsOpen =
+    !managedLibrary ||
+    managedLibrary.activeSkillSlugs.length === 0 ||
+    showActiveOnly ||
+    selectedTag !== "all";
   const showNextTaskPanel = Boolean(nextTaskAction && !nextTaskAction.isActive);
   const hasActiveManagedMode = Boolean(managedLibrary?.activeSkillSlugs.length);
   const hasLatestAction =
@@ -1648,7 +1653,7 @@ export function App() {
       </section>
 
       <section className="panel">
-        <details className="library-details">
+        <details className="library-details" open={singleSkillToolsOpen}>
           <summary>
             <strong>Single-skill tools</strong>
             <span className="subtle">Use this when you want one skill at a time instead of a full pack.</span>
