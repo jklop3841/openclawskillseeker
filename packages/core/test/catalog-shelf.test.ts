@@ -30,6 +30,8 @@ test("featured shelf UI references curated packs and skills", async () => {
   assert.equal(appSource.includes("One focused mode, one restart, one prompt."), true);
   assert.equal(appSource.includes("Quick journey"), true);
   assert.equal(appSource.includes("Start recommended task"), true);
+  assert.equal(appSource.includes("Current task mode active"), true);
+  assert.equal(appSource.includes("Open setup and repair"), true);
   assert.equal(appSource.includes("Copy next ask"), true);
   assert.equal(appSource.includes("Now active for this kind of work"), true);
   assert.equal(appSource.includes("ready to test"), true);
@@ -40,6 +42,12 @@ test("featured shelf UI references curated packs and skills", async () => {
   assert.equal(appSource.includes("Start this task mode"), true);
   assert.equal(appSource.includes("Copy sample ask"), true);
   assert.equal(appSource.includes("Mode library"), true);
+  assert.equal(appSource.includes("Saved modes"), true);
+  assert.equal(appSource.includes("Save current mode"), true);
+  assert.equal(appSource.includes("Apply saved mode"), true);
+  assert.equal(appSource.includes("Delete saved mode"), true);
+  assert.equal(appSource.includes("Apply oldest version"), true);
+  assert.equal(appSource.includes("Current saved mode"), true);
   assert.equal(appSource.includes("The current mode is already live. Open this library when you want to switch context or use a narrower override."), true);
   assert.equal(appSource.includes("Mode library at a glance"), true);
   assert.equal(appSource.includes("When to use single-skill tools"), true);

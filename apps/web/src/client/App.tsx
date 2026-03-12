@@ -986,6 +986,51 @@ export function App() {
     });
   }, [libraryQuery, managedLibrary, showActiveOnly]);
   const setupNeedsAttention = !setupStatus || setupStatus.status !== "ready";
+  const recommendedEntryMode: EntryMode =
+    setupStatus?.recommendation === "install-clawhub" || setupStatus?.recommendation === "install-openclaw"
+      ? setupStatus.recommendation
+      : "connect-existing";
+  const heroAction = useMemo(() => {
+    if (setupNeedsAttention) {
+      return {
+        title: "Recommended next move",
+        body: recommendationSummary(setupStatus),
+        primaryLabel: "Retry environment check",
+        onPrimary: () => void refresh(),
+        secondaryLabel: "Open setup and repair",
+        onSecondary: () => setEntryMode(recommendedEntryMode),
+        showSecondary: true,
+        footer: `Current action: ${actionLabel}`
+      };
+    }
+
+    return {
+      title: nextTaskAction ? nextTaskAction.title : "Recommended next move",
+      body: nextTaskAction ? nextTaskAction.body : recommendationSummary(setupStatus),
+      primaryLabel: nextTaskAction?.isActive ? "Current task mode active" : nextTaskAction?.buttonLabel ?? "Start recommended task",
+      onPrimary:
+        nextTaskAction && !nextTaskAction.isActive
+          ? () => void runManagedPackSwitch(nextTaskAction.packId)
+          : undefined,
+      secondaryLabel: "Copy next ask",
+      onSecondary: nextTaskAction?.prompt
+        ? () => void copyText(nextTaskAction.prompt, "Next ask copied")
+        : undefined,
+      showSecondary: Boolean(nextTaskAction?.prompt),
+      footer: nextTaskAction?.prompt
+        ? "Restart OpenClaw once, then paste the copied ask into OpenClaw."
+        : `Current action: ${actionLabel}`
+    };
+  }, [
+    actionLabel,
+    copyText,
+    nextTaskAction,
+    refresh,
+    runManagedPackSwitch,
+    recommendedEntryMode,
+    setupNeedsAttention,
+    setupStatus
+  ]);
   const libraryOpen =
     !managedLibrary ||
     managedLibrary.activeSkillSlugs.length === 0 ||
@@ -1029,19 +1074,25 @@ export function App() {
           <ExoskeletonMascot />
         </div>
         <div className="hero-action-card">
-          <h2>Recommended next move</h2>
-          <p>{recommendationSummary(setupStatus)}</p>
+          <h2>{heroAction.title}</h2>
+          <p>{heroAction.body}</p>
           <div className="tag-row">
             <span className={`chip ${setupStatus?.status === "blocked" ? "chip-danger" : setupStatus?.status === "needs attention" ? "chip-warning" : "chip-accent"}`}>
               {setupStatus?.status ?? "loading"}
             </span>
             {setupStatus ? <span className="chip">{setupStatus.recommendation}</span> : null}
           </div>
-          <button className="primary" disabled={busy} onClick={() => void runManagedPackSwitch("knowledge-work")}>Switch OpenClaw to Knowledge Work</button>
-          <button disabled={busy} onClick={() => void refresh()}>Retry environment check</button>
+          <button className="primary" disabled={busy || !heroAction.onPrimary} onClick={() => heroAction.onPrimary?.()}>
+            {heroAction.primaryLabel}
+          </button>
+          {heroAction.showSecondary ? (
+            <button disabled={busy || !heroAction.onSecondary} onClick={() => heroAction.onSecondary?.()}>
+              {heroAction.secondaryLabel}
+            </button>
+          ) : null}
           <button disabled={busy} onClick={() => void clearManagedSkills()}>Clear active skills</button>
           <button disabled={busy} onClick={() => void rollbackLatest()}>Undo last attach</button>
-          <p className="subtle small">Current action: {actionLabel}</p>
+          <p className="subtle small">{heroAction.footer}</p>
         </div>
       </section>
 
