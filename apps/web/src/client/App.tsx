@@ -1075,10 +1075,92 @@ export function App() {
             <button disabled={busy} onClick={() => void copyText(managedLibrary.activeSkillsPath, "Managed active path copied")}>
               Copy active path
             </button>
+            <input
+              type="text"
+              value={savedPackName}
+              placeholder="Save this mode as..."
+              onChange={(event) => setSavedPackName(event.target.value)}
+              disabled={busy}
+            />
+            <button disabled={busy || managedLibrary.activeSkillSlugs.length === 0} onClick={() => void saveCurrentMode()}>
+              Save current mode
+            </button>
             <button disabled={busy || !promptCard.prompt} onClick={() => void copyText(promptCard.prompt, "Current mode test ask copied")}>
               Copy test ask
             </button>
           </div>
+        </section>
+      ) : null}
+
+      {(savedPacks.length > 0 || Boolean(activeSavedPack)) ? (
+        <section className="panel">
+          <details className="library-details secondary-library-details" open>
+            <summary>
+              <div>
+                <strong>Saved modes</strong>
+                <span className="subtle">
+                  Save a focused active set, come back to it later, and switch contexts without rebuilding the same combination by hand.
+                </span>
+              </div>
+            </summary>
+            <div className="dashboard-grid">
+              <div className="prompt-box compact-prompt">
+                <span className="store-label">Current saved mode</span>
+                <p>
+                  {activeSavedPack
+                    ? `${activeSavedPack.name} is currently active with ${activeSavedPack.skillSlugs.length} saved skills.`
+                    : "No saved mode is active right now."}
+                </p>
+                <ul className="mini-points">
+                  <li>{activeSavedPack?.selectedVersionKey ? `Selected version: ${activeSavedPack.selectedVersionKey}` : "Selected version: none"}</li>
+                  <li>{activeSavedPack?.lastAppliedAt ? `Last applied: ${activeSavedPack.lastAppliedAt}` : "Last applied: not yet"}</li>
+                </ul>
+              </div>
+              <div className="prompt-box compact-prompt">
+                <span className="store-label">Why save modes</span>
+                <p>Saved modes are best when you repeatedly return to the same exact working setup and do not want to rebuild the active set each time.</p>
+                <ul className="mini-points">
+                  <li>Capture one exact active set.</li>
+                  <li>Return to it in one click later.</li>
+                  <li>Keep lightweight version history for that mode.</li>
+                </ul>
+              </div>
+            </div>
+            <div className="card-grid">
+              {savedPacks.map((pack) => (
+                <article className={`catalog-card ${state?.activeSavedPackName === pack.name ? "catalog-card-active" : ""}`} key={pack.name}>
+                  <div className="catalog-topline">
+                    <span className="chip chip-accent">saved mode</span>
+                    <span className="subtle">{pack.skillSlugs.length} skills</span>
+                    <span className={`chip ${state?.activeSavedPackName === pack.name ? "chip-accent" : ""}`}>
+                      {state?.activeSavedPackName === pack.name ? "active" : "saved"}
+                    </span>
+                  </div>
+                  <h3>{pack.name}</h3>
+                  <p>{pack.skillSlugs.length > 0 ? pack.skillSlugs.join(", ") : "No skills were saved in this mode."}</p>
+                  <p className="catalog-meta"><strong>Versions:</strong> {pack.versions.length}</p>
+                  <p className="catalog-meta"><strong>Current version:</strong> {pack.selectedVersionKey ?? "none"}</p>
+                  <div className="card-actions">
+                    <button className="primary" disabled={busy} onClick={() => void applySavedMode(pack.name)}>
+                      {state?.activeSavedPackName === pack.name ? "Apply again" : "Apply saved mode"}
+                    </button>
+                    <button
+                      disabled={busy || pack.versions.length < 2}
+                      onClick={() => {
+                        const oldestVersion = pack.versions.at(0)?.versionKey;
+                        if (oldestVersion) {
+                          void applySavedMode(pack.name, oldestVersion);
+                        }
+                      }}
+                    >
+                      Apply oldest version
+                    </button>
+                    <button disabled={busy} onClick={() => void deleteSavedMode(pack.name)}>Delete saved mode</button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </details>
         </section>
       ) : null}
 
