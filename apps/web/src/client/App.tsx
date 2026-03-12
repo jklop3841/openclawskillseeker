@@ -1145,7 +1145,7 @@ export function App() {
 
       {(savedPacks.length > 0 || Boolean(activeSavedPack)) ? (
         <section className="panel">
-          <details className="library-details secondary-library-details" open>
+          <details className="library-details secondary-library-details" open={Boolean(activeSavedPack)}>
             <summary>
               <div>
                 <strong>Saved modes</strong>
