@@ -1383,6 +1383,27 @@ export function App() {
             </div>
             <span className="mode-status-pill">{modeReadiness.status}</span>
           </div>
+          {!hasActiveManagedMode && nextTaskAction ? (
+            <div className="prompt-box compact-prompt">
+              <span className="store-label">Start a work mode first</span>
+              <p>
+                The fastest way forward is to switch into one focused mode now, then restart OpenClaw and test with a
+                single ask.
+              </p>
+              <div className="card-actions">
+                <button
+                  className="primary"
+                  disabled={busy || nextTaskAction.isActive}
+                  onClick={() => void runManagedPackSwitch(nextTaskAction.packId)}
+                >
+                  {nextTaskAction.buttonLabel}
+                </button>
+                <button disabled={busy} onClick={() => void copyText(nextTaskAction.prompt, "Next ask copied")}>
+                  Copy next ask
+                </button>
+              </div>
+            </div>
+          ) : null}
           <div className="mode-overview-grid">
             <div className="prompt-box compact-prompt">
               <span className="store-label">{managedLibrary?.currentModeTitle ?? "Current mode: loading"}</span>
