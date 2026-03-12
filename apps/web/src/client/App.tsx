@@ -1038,6 +1038,7 @@ export function App() {
     showActiveOnly ||
     selectedTag !== "all";
   const showNextTaskPanel = Boolean(nextTaskAction && !nextTaskAction.isActive);
+  const hasActiveManagedMode = Boolean(managedLibrary?.activeSkillSlugs.length);
   const hasLatestAction =
     Boolean(attachResult) ||
     Boolean(managedResult) ||
@@ -1100,7 +1101,7 @@ export function App() {
       {message ? <section className="banner">{message}</section> : null}
       {copyNotice ? <section className="banner copy-banner">{copyNotice}</section> : null}
 
-      {managedLibrary ? (
+      {managedLibrary && hasActiveManagedMode ? (
         <section className="panel active-strip">
           <div className="active-strip-copy">
             <span className="store-label">Active now</span>
