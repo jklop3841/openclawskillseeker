@@ -1092,8 +1092,6 @@ export function App() {
               {heroAction.secondaryLabel}
             </button>
           ) : null}
-          <button disabled={busy} onClick={() => void clearManagedSkills()}>Clear active skills</button>
-          <button disabled={busy} onClick={() => void rollbackLatest()}>Undo last attach</button>
           <p className="subtle small">{heroAction.footer}</p>
         </div>
       </section>
@@ -1444,6 +1442,21 @@ export function App() {
                   {previousModeAction ? "Switch back to previous mode" : "No previous mode yet"}
                 </button>
               </div>
+            </div>
+          </div>
+          <div className="prompt-box compact-prompt">
+            <span className="store-label">Manage the live mode</span>
+            <p>
+              Keep the active set tight. Clear it when you want a clean slate, or undo the last attach if you need to
+              back out the latest change.
+            </p>
+            <div className="card-actions">
+              <button type="button" disabled={busy} onClick={() => void clearManagedSkills()}>
+                Clear active skills
+              </button>
+              <button type="button" disabled={busy} onClick={() => void rollbackLatest()}>
+                Undo last attach
+              </button>
             </div>
           </div>
           <div className="dashboard-grid mode-evidence-grid">
