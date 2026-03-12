@@ -1107,7 +1107,7 @@ export function App() {
             <span className="store-label">Active now</span>
             <h2>{managedLibrary.currentModeTitle}</h2>
             <p className="subtle">
-              {managedLibrary.currentModeSummary} Keep the live skill set intentionally small, then test with one focused ask in OpenClaw.
+              {managedLibrary.currentModeSummary} This top strip is only a quick snapshot of what OpenClaw should see right now.
             </p>
           </div>
           <div className="store-stats compact active-strip-stats">
@@ -1123,14 +1123,6 @@ export function App() {
               <span className="store-label">Last change</span>
               <strong>{managedLibrary.recentActions[0]?.label ?? "No changes yet"}</strong>
             </div>
-          </div>
-          <div className="prompt-box compact-prompt">
-            <span className="store-label">Use this mode in OpenClaw now</span>
-            <p>
-              Restart OpenClaw once, then paste one focused ask so it works against the current managed skill set instead
-              of the full library.
-            </p>
-            <code className="inline-prompt">{promptCard.prompt}</code>
           </div>
           <div className="card-actions">
             <button disabled={busy} onClick={() => void copyText(managedLibrary.activeSkillsPath, "Managed active path copied")}>
@@ -1478,18 +1470,6 @@ export function App() {
                 Managed path: {managedLibrary?.activeSkillsPath ?? "Will appear after the first managed activation."}
               </p>
             </div>
-          </div>
-          <div className="stat"><span>Active skills</span><strong>{managedLibrary?.activeSkillSlugs.length ? managedLibrary.activeSkillSlugs.join(", ") : "none"}</strong></div>
-          <div className="stat"><span>Active packs</span><strong>{managedLibrary?.activePackIds.length ? managedLibrary.activePackIds.join(", ") : "none"}</strong></div>
-          <div className="stat"><span>Directly enabled skills</span><strong>{managedLibrary?.manualSkillSlugs.length ? managedLibrary.manualSkillSlugs.join(", ") : "none"}</strong></div>
-          <div className="stat"><span>Managed path</span><strong>{managedLibrary?.activeSkillsPath ?? "Will appear after first managed activation."}</strong></div>
-          <div className="prompt-box">
-            <span className="store-label">Activation proof</span>
-            <p>
-              {managedLibrary
-                ? `Lock file ${managedLibrary.lockFileExists ? "detected" : "not detected"} · ${managedLibrary.skillMdCount} active skill folders currently include SKILL.md.`
-                : "Checking whether the managed active set is fully present on disk."}
-            </p>
           </div>
           <div className="card-actions">
             <button

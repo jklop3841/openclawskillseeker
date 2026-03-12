@@ -70,7 +70,6 @@ test("featured shelf UI references curated packs and skills", async () => {
   assert.equal(appSource.includes("Live packs"), true);
   assert.equal(appSource.includes("Direct overrides"), true);
   assert.equal(appSource.includes("What OpenClaw sees now"), true);
-  assert.equal(appSource.includes("Use this mode in OpenClaw now"), true);
   assert.equal(appSource.includes("Copy active path"), true);
   assert.equal(appSource.includes("Copy OpenClaw test ask"), true);
   assert.equal(appSource.includes("Current mode test ask copied"), true);
