@@ -49,6 +49,19 @@ type ManagedLibrary = {
     activeSkillSlugs: string[];
   }>;
 };
+type SavedManagedPack = {
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+  skillSlugs: string[];
+  selectedVersionKey?: string;
+  lastAppliedAt?: string;
+  versions: Array<{
+    versionKey: string;
+    savedAt: string;
+    skillSlugs: string[];
+  }>;
+};
 type RepairCard = { title: string; body: string; steps: string[]; level: "blocked" | "warning" };
 
 const featuredPackIds = ["demo-safe", "knowledge-work", "delivery-engine", "business-ops"] as const;
@@ -301,28 +314,6 @@ function buildModeRationale(currentScenario: { scenario: (typeof workScenarios)[
   };
 }
 
-function buildGuidedJourney(currentScenario: { scenario: (typeof workScenarios)[number]; pack: ManagedLibrary["packs"][number] } | null) {
-  if (currentScenario) {
-    return {
-      title: `You are set up for ${currentScenario.scenario.title}`,
-      steps: [
-        `Keep ${currentScenario.pack.name} as the active mode.`,
-        "Restart OpenClaw so it reloads the current active skills.",
-        `Use one ${currentScenario.scenario.title.toLowerCase()} request to confirm the mode is working.`
-      ]
-    };
-  }
-
-  return {
-    title: "Start with one focused task mode",
-    steps: [
-      "Choose one task card below.",
-      "Switch OpenClaw to that matching mode.",
-      "Restart OpenClaw and test with the copied prompt."
-    ]
-  };
-}
-
 function buildModeReadiness(
   currentScenario: { scenario: (typeof workScenarios)[number]; pack: ManagedLibrary["packs"][number] } | null,
   managedLibrary: ManagedLibrary | null
@@ -373,6 +364,7 @@ export function App() {
   const [setupStatus, setSetupStatus] = useState<SetupStatus | null>(null);
   const [catalog, setCatalog] = useState<Catalog | null>(null);
   const [managedLibrary, setManagedLibrary] = useState<ManagedLibrary | null>(null);
+  const [savedPacks, setSavedPacks] = useState<SavedManagedPack[]>([]);
   const [state, setState] = useState<AppState | null>(null);
   const [attachResult, setAttachResult] = useState<AttachFlowResult | null>(null);
   const [managedResult, setManagedResult] = useState<ManagedLibraryActivation | null>(null);
@@ -389,13 +381,15 @@ export function App() {
   const [selectedTag, setSelectedTag] = useState<string>("all");
   const [showActiveOnly, setShowActiveOnly] = useState(false);
   const [copyNotice, setCopyNotice] = useState("");
+  const [savedPackName, setSavedPackName] = useState("");
 
   async function refresh() {
-    const [setupData, catalogData, stateData, libraryData] = await Promise.all([
+    const [setupData, catalogData, stateData, libraryData, savedPackData] = await Promise.all([
       getJson<SetupStatus>("/api/setup/status"),
       getJson<Catalog>("/api/catalog"),
       getJson<AppState>("/api/state"),
-      getJson<ManagedLibrary>("/api/library")
+      getJson<ManagedLibrary>("/api/library"),
+      getJson<{ items: SavedManagedPack[] }>("/api/saved-packs")
     ]);
     setSetupStatus(setupData);
     setEntryMode(
@@ -406,6 +400,7 @@ export function App() {
     setCatalog(catalogData);
     setState(stateData);
     setManagedLibrary(libraryData);
+    setSavedPacks(savedPackData.items);
   }
 
   useEffect(() => {
@@ -687,6 +682,111 @@ export function App() {
     }
   }
 
+  async function saveCurrentMode() {
+    const trimmedName = savedPackName.trim();
+    if (!trimmedName) {
+      setFailureTitle("Saved mode name required");
+      setFailureBody("Enter a short name before saving the current mode.");
+      setMessage("Enter a saved mode name first.");
+      return;
+    }
+
+    setBusy(true);
+    setMessage("");
+    setActionLabel(`Save current mode as: ${trimmedName}`);
+    try {
+      const result = await getJson<SavedManagedPack>("/api/saved-packs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: trimmedName })
+      });
+      setAdvancedPayload(result);
+      setResultLines([
+        `Saved mode: ${result.name}`,
+        `Skills: ${result.skillSlugs.length > 0 ? result.skillSlugs.join(", ") : "none"}`,
+        `Versions: ${result.versions.length}`,
+        `Current version: ${result.selectedVersionKey ?? "none"}`
+      ]);
+      setNextStep("Apply this saved mode later when you want to return to the same focused skill set.");
+      setFailureTitle("");
+      setFailureBody("");
+      setMessage(`Saved the current mode as ${result.name}.`);
+      await refresh();
+    } catch (error) {
+      const text = error instanceof Error ? error.message : String(error);
+      setFailureTitle("Saving current mode failed");
+      setFailureBody(text);
+      setMessage(text);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function applySavedMode(name: string, versionKey?: string) {
+    setBusy(true);
+    setMessage("");
+    setActionLabel(`Apply saved mode: ${name}`);
+    try {
+      const result = await getJson<{ pack: SavedManagedPack; version: SavedManagedPack["versions"][number]; active: ManagedLibrary }>(
+        `/api/saved-packs/${encodeURIComponent(name)}/apply`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(versionKey ? { versionKey } : {})
+        }
+      );
+      setAdvancedPayload(result);
+      setManagedResult(null);
+      setAttachResult(null);
+      setResultLines([
+        `Applied saved mode: ${result.pack.name}`,
+        `Version: ${result.version.versionKey}`,
+        `Skills: ${result.version.skillSlugs.join(", ")}`,
+        `Current mode: ${result.active.currentModeTitle}`
+      ]);
+      setNextStep("Restart OpenClaw so it reloads this saved active set, then test with one focused ask.");
+      setFailureTitle("");
+      setFailureBody("");
+      setMessage(`Applied saved mode ${result.pack.name}.`);
+      await refresh();
+    } catch (error) {
+      const text = error instanceof Error ? error.message : String(error);
+      setFailureTitle("Applying saved mode failed");
+      setFailureBody(text);
+      setMessage(text);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function deleteSavedMode(name: string) {
+    setBusy(true);
+    setMessage("");
+    setActionLabel(`Delete saved mode: ${name}`);
+    try {
+      const result = await getJson<{ ok: boolean; items: SavedManagedPack[] }>(`/api/saved-packs/${encodeURIComponent(name)}`, {
+        method: "DELETE"
+      });
+      setAdvancedPayload(result);
+      setResultLines([
+        `Deleted saved mode: ${name}`,
+        `Remaining saved modes: ${result.items.length}`
+      ]);
+      setNextStep("Create a new saved mode whenever you want to preserve another focused skill set.");
+      setFailureTitle("");
+      setFailureBody("");
+      setMessage(`Deleted saved mode ${name}.`);
+      await refresh();
+    } catch (error) {
+      const text = error instanceof Error ? error.message : String(error);
+      setFailureTitle("Deleting saved mode failed");
+      setFailureBody(text);
+      setMessage(text);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function reapplyRecentAction(entry: ManagedLibrary["recentActions"][number]) {
     if (entry.mode === "deactivate-all") {
       await clearManagedSkills();
@@ -762,6 +862,13 @@ export function App() {
         .filter(Boolean) as CatalogSkill[],
     [catalog]
   );
+  const activeSavedPack = useMemo(
+    () =>
+      state?.activeSavedPackName
+        ? savedPacks.find((entry) => entry.name === state.activeSavedPackName) ?? null
+        : null,
+    [savedPacks, state?.activeSavedPackName]
+  );
   const scenarioPacks = useMemo(
     () =>
       workScenarios
@@ -785,10 +892,6 @@ export function App() {
   const currentScenario = useMemo(
     () => scenarioPacks.find(({ pack }) => pack.active) ?? null,
     [scenarioPacks]
-  );
-  const paperFactoryTask = useMemo(
-    () => taskCards.find(({ task }) => task.packId === "paper-factory") ?? null,
-    [taskCards]
   );
   const nextTaskAction = useMemo(() => {
     if (currentScenario) {
@@ -823,7 +926,6 @@ export function App() {
   const prompt = buildPrompt(managedResult, attachResult);
   const promptCard = buildScenarioPromptCard(currentScenario, prompt);
   const modeRationale = buildModeRationale(currentScenario, managedLibrary);
-  const guidedJourney = buildGuidedJourney(currentScenario);
   const modeReadiness = buildModeReadiness(currentScenario, managedLibrary);
   const previousModeAction = useMemo(() => {
     if (!managedLibrary?.recentActions.length) {
@@ -983,38 +1085,6 @@ export function App() {
       <section className="panel">
         <div className="section-head">
           <div>
-            <h2>Your next three steps</h2>
-            <p className="subtle">This keeps the workflow short: choose one task mode, keep the active set small, then verify the result inside OpenClaw.</p>
-          </div>
-        </div>
-        <div className="dashboard-grid">
-          <div className="prompt-box compact-prompt">
-            <span className="store-label">{guidedJourney.title}</span>
-            <ol className="step-list compact-list">
-              {guidedJourney.steps.map((step) => <li key={step}>{step}</li>)}
-            </ol>
-          </div>
-          {paperFactoryTask ? (
-            <div className="prompt-box compact-prompt spotlight-box">
-              <span className="store-label">Paper Factory spotlight</span>
-              <p>{paperFactoryTask.task.summary}</p>
-              <p className="catalog-meta"><strong>Best first ask:</strong> {paperFactoryTask.task.sampleAsk}</p>
-              <div className="card-actions">
-                <button className="primary" disabled={busy || paperFactoryTask.pack.active} onClick={() => void runManagedPackSwitch(paperFactoryTask.pack.id)}>
-                  {paperFactoryTask.pack.active ? "Paper Factory active" : "Start Paper Factory mode"}
-                </button>
-                <button disabled={busy} onClick={() => void copyText(paperFactoryTask.task.sampleAsk, "Paper Factory sample ask copied")}>
-                  Copy paper ask
-                </button>
-              </div>
-            </div>
-          ) : null}
-        </div>
-      </section>
-
-      <section className="panel">
-        <div className="section-head">
-          <div>
             <h2>Start from the task you need right now</h2>
             <p className="subtle">
               Choose a real job to do. We will switch OpenClaw to the matching mode, keep the live skill set small, and give you a prompt to test.
@@ -1056,16 +1126,20 @@ export function App() {
               <p className="subtle">One focused mode, one restart, one prompt.</p>
             </div>
           </div>
-          <div className="next-action-strip">
-            <div className="prompt-box compact-prompt">
-              <span className="store-label">{nextTaskAction.title}</span>
-              <p>{nextTaskAction.body}</p>
-              <code className="inline-prompt">{nextTaskAction.prompt}</code>
-            </div>
-            <div className="next-action-controls">
-              <ol className="step-list compact-list">
-                <li>{nextTaskAction.isActive ? "Keep the current task mode active." : "Switch to the recommended task mode."}</li>
-                <li>Restart OpenClaw once.</li>
+            <div className="next-action-strip">
+              <div className="prompt-box compact-prompt">
+                <span className="store-label">{nextTaskAction.title}</span>
+                <p>{nextTaskAction.body}</p>
+                <code className="inline-prompt">{nextTaskAction.prompt}</code>
+              </div>
+              <div className="next-action-controls">
+                <div className="prompt-box compact-prompt">
+                  <span className="store-label">Quick journey</span>
+                  <p>{nextTaskAction.isActive ? "You are already in the right task mode." : "This recommended path keeps the active set small and focused."}</p>
+                </div>
+                <ol className="step-list compact-list">
+                  <li>{nextTaskAction.isActive ? "Keep the current task mode active." : "Switch to the recommended task mode."}</li>
+                  <li>Restart OpenClaw once.</li>
                 <li>Paste the ask into OpenClaw.</li>
               </ol>
               <div className="card-actions">

@@ -28,12 +28,9 @@ test("featured shelf UI references curated packs and skills", async () => {
   assert.equal(appSource.includes("Start from the task you need right now"), true);
   assert.equal(appSource.includes("Do this next"), true);
   assert.equal(appSource.includes("One focused mode, one restart, one prompt."), true);
+  assert.equal(appSource.includes("Quick journey"), true);
   assert.equal(appSource.includes("Start recommended task"), true);
   assert.equal(appSource.includes("Copy next ask"), true);
-  assert.equal(appSource.includes("Your next three steps"), true);
-  assert.equal(appSource.includes("Paper Factory spotlight"), true);
-  assert.equal(appSource.includes("Start Paper Factory mode"), true);
-  assert.equal(appSource.includes("Copy paper ask"), true);
   assert.equal(appSource.includes("Now active for this kind of work"), true);
   assert.equal(appSource.includes("ready to test"), true);
   assert.equal(appSource.includes("choose one mode"), true);
