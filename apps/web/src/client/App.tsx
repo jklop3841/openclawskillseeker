@@ -1400,142 +1400,146 @@ export function App() {
               </div>
             </div>
           ) : null}
-          <div className="mode-overview-grid">
-            <div className="prompt-box compact-prompt">
-              <span className="store-label">{managedLibrary?.currentModeTitle ?? "Current mode: loading"}</span>
-              <p>{managedLibrary?.currentModeSummary ?? "Checking the currently active managed mode."}</p>
-            </div>
-            <div className="store-stats compact mode-stats-card">
-              <div>
-                <span className="store-label">Live skills</span>
-                <strong>{managedLibrary?.activeSkillSlugs.length ?? 0}</strong>
+          {hasActiveManagedMode ? (
+            <>
+              <div className="mode-overview-grid">
+                <div className="prompt-box compact-prompt">
+                  <span className="store-label">{managedLibrary?.currentModeTitle ?? "Current mode: loading"}</span>
+                  <p>{managedLibrary?.currentModeSummary ?? "Checking the currently active managed mode."}</p>
+                </div>
+                <div className="store-stats compact mode-stats-card">
+                  <div>
+                    <span className="store-label">Live skills</span>
+                    <strong>{managedLibrary?.activeSkillSlugs.length ?? 0}</strong>
+                  </div>
+                  <div>
+                    <span className="store-label">Live packs</span>
+                    <strong>{managedLibrary?.activePackIds.length ?? 0}</strong>
+                  </div>
+                  <div>
+                    <span className="store-label">Direct overrides</span>
+                    <strong>{managedLibrary?.manualSkillSlugs.length ?? 0}</strong>
+                  </div>
+                  <div>
+                    <span className="store-label">Proof</span>
+                    <strong>{managedLibrary?.lockFileExists ? "verified" : "checking"}</strong>
+                  </div>
+                </div>
               </div>
-              <div>
-                <span className="store-label">Live packs</span>
-                <strong>{managedLibrary?.activePackIds.length ?? 0}</strong>
+              <div className="dashboard-grid">
+                <div className="prompt-box compact-prompt">
+                  <span className="store-label">{modeRationale.title}</span>
+                  <p>{modeRationale.body}</p>
+                  <ul className="mini-points">
+                    {modeRationale.points.map((point) => <li key={point}>{point}</li>)}
+                  </ul>
+                </div>
+                <div className="prompt-box compact-prompt">
+                  <span className="store-label">Fast recovery</span>
+                  <p>
+                    {previousModeAction
+                      ? `If this mode is not the right fit, you can jump back to ${previousModeAction.label.toLowerCase()}.`
+                      : "As you switch more modes, this area will keep the last useful state one click away."}
+                  </p>
+                  <div className="card-actions">
+                    <button
+                      type="button"
+                      disabled={busy || !previousModeAction}
+                      onClick={() => previousModeAction ? void reapplyRecentAction(previousModeAction) : undefined}
+                    >
+                      {previousModeAction ? "Switch back to previous mode" : "No previous mode yet"}
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div>
-                <span className="store-label">Direct overrides</span>
-                <strong>{managedLibrary?.manualSkillSlugs.length ?? 0}</strong>
+              <div className="prompt-box compact-prompt">
+                <span className="store-label">Manage the live mode</span>
+                <p>
+                  Keep the active set tight. Clear it when you want a clean slate, or undo the last attach if you need to
+                  back out the latest change.
+                </p>
+                <div className="card-actions">
+                  <button type="button" disabled={busy} onClick={() => void clearManagedSkills()}>
+                    Clear active skills
+                  </button>
+                  <button type="button" disabled={busy} onClick={() => void rollbackLatest()}>
+                    Undo last attach
+                  </button>
+                </div>
               </div>
-              <div>
-                <span className="store-label">Proof</span>
-                <strong>{managedLibrary?.lockFileExists ? "verified" : "checking"}</strong>
+              <div className="dashboard-grid mode-evidence-grid">
+                <div className="prompt-box compact-prompt">
+                  <span className="store-label">What OpenClaw sees now</span>
+                  <p>
+                    {managedLibrary?.activeSkillSlugs.length
+                      ? managedLibrary.activeSkillSlugs.join(", ")
+                      : "No managed skills are live yet. Pick one task mode first so OpenClaw sees a focused active set."}
+                  </p>
+                  <ul className="mini-points">
+                    <li>{managedLibrary?.activePackIds.length ? `Mode source: ${managedLibrary.activePackIds.join(", ")}` : "Mode source: direct skill selection only"}</li>
+                    <li>{managedLibrary?.manualSkillSlugs.length ? `Direct overrides: ${managedLibrary.manualSkillSlugs.join(", ")}` : "Direct overrides: none"}</li>
+                  </ul>
+                </div>
+                <div className="prompt-box compact-prompt">
+                  <span className="store-label">Activation proof</span>
+                  <p>
+                    {managedLibrary
+                      ? `${managedLibrary.lockFileExists ? "Lock file detected." : "Lock file not detected yet."} ${managedLibrary.skillMdCount} active skill folders currently include SKILL.md.`
+                      : "Checking whether the managed active set is fully present on disk."}
+                  </p>
+                  <p className="subtle">
+                    Managed path: {managedLibrary?.activeSkillsPath ?? "Will appear after the first managed activation."}
+                  </p>
+                </div>
               </div>
-            </div>
-          </div>
-          <div className="dashboard-grid">
-            <div className="prompt-box compact-prompt">
-              <span className="store-label">{modeRationale.title}</span>
-              <p>{modeRationale.body}</p>
-              <ul className="mini-points">
-                {modeRationale.points.map((point) => <li key={point}>{point}</li>)}
-              </ul>
-            </div>
-            <div className="prompt-box compact-prompt">
-              <span className="store-label">Fast recovery</span>
-              <p>
-                {previousModeAction
-                  ? `If this mode is not the right fit, you can jump back to ${previousModeAction.label.toLowerCase()}.`
-                  : "As you switch more modes, this area will keep the last useful state one click away."}
-              </p>
               <div className="card-actions">
                 <button
                   type="button"
-                  disabled={busy || !previousModeAction}
-                  onClick={() => previousModeAction ? void reapplyRecentAction(previousModeAction) : undefined}
+                  disabled={busy || !managedLibrary?.activeSkillsPath}
+                  onClick={() => void copyText(managedLibrary?.activeSkillsPath ?? "", "Managed path copied")}
                 >
-                  {previousModeAction ? "Switch back to previous mode" : "No previous mode yet"}
+                  Copy managed path
+                </button>
+                <button
+                  type="button"
+                  disabled={busy || !prompt}
+                  onClick={() => void copyText(prompt, "OpenClaw test ask copied")}
+                >
+                  Copy OpenClaw test ask
                 </button>
               </div>
-            </div>
-          </div>
-          <div className="prompt-box compact-prompt">
-            <span className="store-label">Manage the live mode</span>
-            <p>
-              Keep the active set tight. Clear it when you want a clean slate, or undo the last attach if you need to
-              back out the latest change.
-            </p>
-            <div className="card-actions">
-              <button type="button" disabled={busy} onClick={() => void clearManagedSkills()}>
-                Clear active skills
-              </button>
-              <button type="button" disabled={busy} onClick={() => void rollbackLatest()}>
-                Undo last attach
-              </button>
-            </div>
-          </div>
-          <div className="dashboard-grid mode-evidence-grid">
-            <div className="prompt-box compact-prompt">
-              <span className="store-label">What OpenClaw sees now</span>
-              <p>
-                {managedLibrary?.activeSkillSlugs.length
-                  ? managedLibrary.activeSkillSlugs.join(", ")
-                  : "No managed skills are live yet. Pick one task mode first so OpenClaw sees a focused active set."}
-              </p>
-              <ul className="mini-points">
-                <li>{managedLibrary?.activePackIds.length ? `Mode source: ${managedLibrary.activePackIds.join(", ")}` : "Mode source: direct skill selection only"}</li>
-                <li>{managedLibrary?.manualSkillSlugs.length ? `Direct overrides: ${managedLibrary.manualSkillSlugs.join(", ")}` : "Direct overrides: none"}</li>
-              </ul>
-            </div>
-            <div className="prompt-box compact-prompt">
-              <span className="store-label">Activation proof</span>
-              <p>
-                {managedLibrary
-                  ? `${managedLibrary.lockFileExists ? "Lock file detected." : "Lock file not detected yet."} ${managedLibrary.skillMdCount} active skill folders currently include SKILL.md.`
-                  : "Checking whether the managed active set is fully present on disk."}
-              </p>
-              <p className="subtle">
-                Managed path: {managedLibrary?.activeSkillsPath ?? "Will appear after the first managed activation."}
-              </p>
-            </div>
-          </div>
-          <div className="card-actions">
-            <button
-              type="button"
-              disabled={busy || !managedLibrary?.activeSkillsPath}
-              onClick={() => void copyText(managedLibrary?.activeSkillsPath ?? "", "Managed path copied")}
-            >
-              Copy managed path
-            </button>
-            <button
-              type="button"
-              disabled={busy || !prompt}
-              onClick={() => void copyText(prompt, "OpenClaw test ask copied")}
-            >
-              Copy OpenClaw test ask
-            </button>
-          </div>
-          <div className="prompt-box">
-            <span className="store-label">{promptCard.title}</span>
-            <p>{promptCard.body}</p>
-            <code className="inline-prompt">{promptCard.prompt}</code>
-          </div>
-          <ol className="step-list compact-list">
-            <li>Switch one scenario or mode.</li>
-            <li>Restart OpenClaw so it reloads the current active set.</li>
-            <li>Paste the prompt above into OpenClaw and confirm it uses the active skill set.</li>
-          </ol>
-          {managedLibrary?.recentActions.length ? (
-            <div className="history-box">
-              <span className="store-label">Recent changes</span>
-              {managedLibrary.recentActions.map((entry) => (
-                <div key={`${entry.at}-${entry.label}`} className="history-entry">
-                  <p>
-                    {entry.label}
-                    {entry.activeSkillSlugs.length > 0 ? ` -> ${entry.activeSkillSlugs.join(", ")}` : ""}
-                  </p>
-                  <button
-                    type="button"
-                    className="secondary-button"
-                    onClick={() => reapplyRecentAction(entry)}
-                    disabled={busy}
-                  >
-                    Apply again
-                  </button>
+              <div className="prompt-box">
+                <span className="store-label">{promptCard.title}</span>
+                <p>{promptCard.body}</p>
+                <code className="inline-prompt">{promptCard.prompt}</code>
+              </div>
+              <ol className="step-list compact-list">
+                <li>Switch one scenario or mode.</li>
+                <li>Restart OpenClaw so it reloads the current active set.</li>
+                <li>Paste the prompt above into OpenClaw and confirm it uses the active skill set.</li>
+              </ol>
+              {managedLibrary?.recentActions.length ? (
+                <div className="history-box">
+                  <span className="store-label">Recent changes</span>
+                  {managedLibrary.recentActions.map((entry) => (
+                    <div key={`${entry.at}-${entry.label}`} className="history-entry">
+                      <p>
+                        {entry.label}
+                        {entry.activeSkillSlugs.length > 0 ? ` -> ${entry.activeSkillSlugs.join(", ")}` : ""}
+                      </p>
+                      <button
+                        type="button"
+                        className="secondary-button"
+                        onClick={() => reapplyRecentAction(entry)}
+                        disabled={busy}
+                      >
+                        Apply again
+                      </button>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              ) : null}
+            </>
           ) : null}
         </article>
       </section>
