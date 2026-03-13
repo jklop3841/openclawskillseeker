@@ -1098,9 +1098,16 @@ export function App() {
             </span>
             {setupStatus ? <span className="chip">{recommendationChipLabel(setupStatus)}</span> : null}
           </div>
-          <button className="primary" disabled={busy || !heroAction.onPrimary} onClick={() => heroAction.onPrimary?.()}>
-            {heroAction.primaryLabel}
-          </button>
+          {heroAction.onPrimary ? (
+            <button className="primary" disabled={busy} onClick={() => { const action = heroAction.onPrimary; if (action) action(); }}>
+              {heroAction.primaryLabel}
+            </button>
+          ) : (
+            <div className="prompt-box compact-prompt hero-ready-note">
+              <span className="store-label">Already set</span>
+              <p>{heroAction.primaryLabel}</p>
+            </div>
+          )}
           {heroAction.showSecondary ? (
             <button disabled={busy || !heroAction.onSecondary} onClick={() => heroAction.onSecondary?.()}>
               {heroAction.secondaryLabel}
