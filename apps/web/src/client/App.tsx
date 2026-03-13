@@ -201,6 +201,14 @@ function recommendationSteps(status: SetupStatus | null) {
   ];
 }
 
+function recommendationChipLabel(status: SetupStatus | null) {
+  if (!status) return "checking setup";
+  if (status.recommendation === "install-openclaw") return "install base first";
+  if (status.recommendation === "install-clawhub") return "repair installer";
+  if (status.recommendation === "check-wsl-path") return "confirm environment path";
+  return "ready to connect";
+}
+
 function buildRepairCards(status: SetupStatus | null): RepairCard[] {
   if (!status) return [];
   const cards: RepairCard[] = [];
@@ -1088,7 +1096,7 @@ export function App() {
             <span className={`chip ${setupStatus?.status === "blocked" ? "chip-danger" : setupStatus?.status === "needs attention" ? "chip-warning" : "chip-accent"}`}>
               {setupStatus?.status ?? "loading"}
             </span>
-            {setupStatus ? <span className="chip">{setupStatus.recommendation}</span> : null}
+            {setupStatus ? <span className="chip">{recommendationChipLabel(setupStatus)}</span> : null}
           </div>
           <button className="primary" disabled={busy || !heroAction.onPrimary} onClick={() => heroAction.onPrimary?.()}>
             {heroAction.primaryLabel}
